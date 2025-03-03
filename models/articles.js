@@ -4,7 +4,7 @@ const articleSchema = mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: "users"},
     stripeProductId: { type: String },
     articleCreationDate: { type: Date },
-    title: { type: String },
+    title: { type: String, required: true },
     productDescription: { type: String },
     category: { type: String },
     itemType: { type: String },
