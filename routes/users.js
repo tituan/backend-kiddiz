@@ -79,8 +79,13 @@ router.post("/signin", async (req, res) => {
       return;
     }
 
+    //Check the email format
+    if (!emailRegex.test(req.body.email)) {
+      return res.json({ result: false, error: "Invalid email format" });
+    }
+
     const userData = await User.findOne(
-      { email: req.body.username } && { admin: true }
+      { email: req.body.email } 
     );
     if (userData && bcrypt.compareSync(req.body.password, data.password)) {
       res.json({ result: true, token: data.token });
