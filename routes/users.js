@@ -26,6 +26,7 @@ router.post("/signup", async (req, res) => {
     ) {
       return res.json({ result: false, error: "Missing or empty fields" });
     }
+    // check if the email is valid
     if (!emailRegex.test(req.body.email)) {
       return res.json({ result: false, error: "Invalid email" });
     }
