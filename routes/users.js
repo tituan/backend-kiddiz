@@ -6,6 +6,7 @@ const { checkBody } = require("../modules/checkBody");
 const jwt = require("jsonwebtoken");
 const moment = require("moment");
 const bcrypt = require("bcrypt");
+const nodemailer = require("nodemailer");
 
 // Regex to validate email
 const emailRegex =
@@ -13,46 +14,68 @@ const emailRegex =
 
 router.post("/signup", async (req, res) => {
   try {
+    //clean all  req.body is correct withouth spaces
+    const cleanedBody = {
+      firstname: req.body.firstname?.trim() || "",
+      lastname: req.body.lastname?.trim() || "",
+      email: req.body.email?.trim() || "",
+      password: req.body.password,
+      confirmPassword: req.body.confirmPassword,
+      dateOfBirth: req.body.dateOfBirth,
+      conditionUtilisation: req.body.conditionUtilisation,
+      publicy: req.body.publicy,
+    };
+
     // check if the body is correct
     if (
-      !checkBody(req.body, [
+      !checkBody(cleanedBody, [
         "firstname",
         "password",
         "confirmPassword",
         "email",
         "lastname",
-        "dateOfBirth"
+        "dateOfBirth",
       ])
     ) {
       return res.json({ result: false, error: "Missing or empty fields" });
     }
+
+    // check if the user accepted the terms and conditions
+    if (!Boolean(req.body.conditionUtilisation) && !Boolean(req.body.publicy)) {
+      return res.json({
+        result: false,
+        error: "You must accept the terms and conditions",
+      });
+    }
+
     // check if the email is valid
-    if (!emailRegex.test(req.body.email)) {
+    if (!emailRegex.test(cleanedBody.email)) {
       return res.json({ result: false, error: "Invalid email" });
     }
 
     // checke if the user exists
-    const existingUser = await User.findOne({ email: req.body.email });
+    const existingUser = await User.findOne({ email: cleanedBody.email });
 
     if (existingUser) {
       return res.json({ result: false, error: "User already exists" });
     }
 
     // check if the password and confirmPassword are the same
-    if (req.body.password !== req.body.confirmPassword) {
+    if (cleanedBody.password !== cleanedBody.confirmPassword) {
       return res.json({ result: false, error: "Passwords do not match" });
     }
-    // clean code
-    const { username, firstname, lastname, email, password, confirmPassword } =
-      req.body;
 
     // hash the password
-    const hash = bcrypt.hashSync(password, 10);
+    const hash = bcrypt.hashSync(cleanedBody.password, 10);
 
     // Ggenerate a token
-    const token = jwt.sign({ email: req.body.email }, process.env.JWT_SECRET, {
-      expiresIn: "1y",
-    });
+    const token = jwt.sign(
+      { email: cleanedBody.email },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1y",
+      }
+    );
 
     // format the date of birth
     const dateOfBirth = moment(
@@ -61,19 +84,19 @@ router.post("/signup", async (req, res) => {
       true
     );
 
+    const { firstname, lastname, email } = cleanedBody;
+
     // create a new user
     const newUser = new User({
-      username,
       firstname,
       lastname,
-      
       email,
       dateOfBirth,
       password: hash,
       token: token,
     });
 
-    // Sauvegarder le nouvel utilisateur
+    // Save the user
     const savedUser = await newUser.save();
 
     const userResponse = {
@@ -82,47 +105,67 @@ router.post("/signup", async (req, res) => {
       email: savedUser.email,
       dateOfBirth: savedUser.dateOfBirth,
     };
+    // Send an email configuration to the user
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT),
+      secure: true,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
 
-    // Réponse avec le résultat
+    // Send an email to the user
+    const mailToClient = {
+      from: process.env.EMAIL_FROM,
+      to: cleanedBody.email, // Email du client
+      subject: "Accusé de réception de votre demande",
+      text: `Bonjour ${userResponse.firstname},\nNous avons le plaisir de vous compter parmis nous et vous souhaitons d'agréable moments chez KIDDIZ !! `,
+    };
+
+    await transporter.sendMail(mailToClient);
+
+    // Respond with the user data
     res.json({ result: true, userResponse });
   } catch (error) {
-    // Gérer les erreurs éventuelles
-    res
-      .status(500)
-      .json({
-        result: false,
-        message: "An error has occurred.",
-        error: error.message,
-      });
+    // Handle any errors
+    res.status(500).json({
+      result: false,
+      message: "An error has occurred.",
+      error: error.message,
+    });
   }
 });
 
-
-
 router.post("/signin", async (req, res) => {
   try {
+    // Check if the body is correct
     if (!checkBody(req.body, ["email", "password"])) {
       res.json({ result: false, error: "Missing or empty fields" });
       return;
     }
 
-    const userData = await User.findOne(
-      { email: req.body.username } && { admin: true }
-    );
-    if (userData && bcrypt.compareSync(req.body.password, data.password)) {
-      res.json({ result: true, token: data.token });
+    // Check if the email is valid
+    if (!emailRegex.test(req.body.email)) {
+      res.json({ result: false, error: "Invalid email" });
+      return;
+    }
+    // Find the user
+    const userData = await User.findOne({ email: req.body.email });
+    // Check if the user exists and the password is correct
+    if (userData && bcrypt.compareSync(req.body.password, userData.password)) {
+      res.json({ result: true, token: userData.token });
     } else {
       res.json({ result: false, error: "User not found or wrong password" });
     }
   } catch (error) {
     // Handle any errors
-    res
-      .status(500)
-      .json({
-        result: false,
-        message: "An error has occurred.",
-        error: error.message,
-      });
+    res.status(500).json({
+      result: false,
+      message: "An error has occurred.",
+      error: error.message,
+    });
   }
 });
 
