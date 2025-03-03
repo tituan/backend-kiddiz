@@ -28,7 +28,7 @@ const userSchema = mongoose.Schema({
   address: addressSchema, // Intégration du sous-schéma d'adresse
   picture: { type: String },
   phoneNumber: Number,
-  note: { type: String },
+  note: { type: String, default: 5},
   followers: [{ type: Schema.Types.ObjectId, ref: "User" }],
   stripeCustomerId: { type: String },
   socketId: { type: String },
