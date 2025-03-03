@@ -26,6 +26,9 @@ router.post("/signup", async (req, res) => {
     ) {
       return res.json({ result: false, error: "Missing or empty fields" });
     }
+    if (!emailRegex.test(req.body.email)) {
+      return res.json({ result: false, error: "Invalid email" });
+    }
 
     // checke if the user exists
     const existingUser = await User.findOne({ email: req.body.email });
@@ -62,6 +65,7 @@ router.post("/signup", async (req, res) => {
       username,
       firstname,
       lastname,
+      
       email,
       dateOfBirth,
       password: hash,
