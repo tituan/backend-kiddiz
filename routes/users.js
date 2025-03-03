@@ -46,7 +46,7 @@ router.post("/signup", async (req, res) => {
       req.body;
 
     // hash the password
-    const hash = bcrypt.hashSync(req.body.password, 10);
+    const hash = bcrypt.hashSync(password, 10);
 
     // Ggenerate a token
     const token = jwt.sign({ email: req.body.email }, process.env.JWT_SECRET, {
@@ -71,12 +71,19 @@ router.post("/signup", async (req, res) => {
       password: hash,
       token: token,
     });
-    // Sauvegarder le nouvel utilisateur
-    const saveUser = await newUser.save();
 
+    // Sauvegarder le nouvel utilisateur
+    const savedUser = await newUser.save();
+
+    const userResponse = {
+      firstname: savedUser.firstname,
+      lastname: savedUser.lastname,
+      email: savedUser.email,
+      dateOfBirth: savedUser.dateOfBirth,
+    };
 
     // Réponse avec le résultat
-    res.json({ result: true });
+    res.json({ result: true, userResponse });
   } catch (error) {
     // Gérer les erreurs éventuelles
     res
