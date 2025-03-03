@@ -6,6 +6,9 @@ const { checkBody } = require("../modules/checkBody");
 const jwt = require("jsonwebtoken");
 const moment = require("moment");
 const bcrypt = require("bcrypt");
+const nodemailer = require("nodemailer") ;
+
+
 
 // Regex to validate email
 const emailRegex =
@@ -19,23 +22,32 @@ router.post("/signup", async (req, res) => {
         firstname: req.body.firstname?.trim() || '',
         lastname: req.body.lastname?.trim() || '',
         email: req.body.email?.trim() || '',
-        password: req.body.password?.trim() || '',
-        confirmPassword: req.body.confirmPassword?.trim() || '',
+        password: req.body.password,
+        confirmPassword: req.body.confirmPassword,
         dateOfBirth: req.body.dateOfBirth, 
+        conditionUtilisation: req.body.conditionUtilisation,
+        publicy: req.body.publicy,
+      }
 
     // check if the body is correct
     if (
-      !checkBody(cleanedBody [
+      !checkBody(cleanedBody, [
         "firstname",
         "password",
         "confirmPassword",
         "email",
         "lastname",
-        "dateOfBirth"
+        "dateOfBirth",
       ])
     ) {
       return res.json({ result: false, error: "Missing or empty fields" });
     }
+
+    // check if the user accepted the terms and conditions
+    if(!Boolean(req.body.conditionUtilisation) && !Boolean(req.body.publicy) ){
+      return res.json({ result: false, error: "You must accept the terms and conditions" });
+    }
+
     // check if the email is valid
     if (!emailRegex.test(cleanedBody.email)) {
       return res.json({ result: false, error: "Invalid email" });
@@ -55,7 +67,7 @@ router.post("/signup", async (req, res) => {
    
 
     // hash the password
-    const hash = bcrypt.hashSync(password, 10);
+    const hash = bcrypt.hashSync(cleanedBody.password, 10);
 
     // Ggenerate a token
     const token = jwt.sign({ email: cleanedBody.email }, process.env.JWT_SECRET, {
@@ -69,9 +81,11 @@ router.post("/signup", async (req, res) => {
       true
     );
 
+    const { firstname, lastname, email } = cleanedBody;
+
+
     // create a new user
     const newUser = new User({
-      username,
       firstname,
       lastname,
       email,
@@ -80,7 +94,7 @@ router.post("/signup", async (req, res) => {
       token: token,
     });
 
-    // Sauvegarder le nouvel utilisateur
+    // Save the user
     const savedUser = await newUser.save();
 
     const userResponse = {
@@ -89,11 +103,31 @@ router.post("/signup", async (req, res) => {
       email: savedUser.email,
       dateOfBirth: savedUser.dateOfBirth,
     };
+    // Send an email configuration to the user
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT),
+      secure: true,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
 
-    // Réponse avec le résultat
+      // Send an email to the user
+    const mailToClient = {
+      from: process.env.EMAIL_FROM,
+      to: cleanedBody.email, // Email du client
+      subject: "Accusé de réception de votre demande",
+        text: `Bonjour ${userResponse.firstname},\nNous avons le plaisir de vous compter parmis nous et vous souhaitons d'agréable moments chez KIDDIZ !! `
+      };
+  
+      await transporter.sendMail(mailToClient);
+
+    // Respond with the user data
     res.json({ result: true, userResponse });
   } catch (error) {
-    // Gérer les erreurs éventuelles
+    // Handle any errors
     res
       .status(500)
       .json({
@@ -108,19 +142,29 @@ router.post("/signup", async (req, res) => {
 
 router.post("/signin", async (req, res) => {
   try {
+    // Check if the body is correct
     if (!checkBody(req.body, ["email", "password"])) {
       res.json({ result: false, error: "Missing or empty fields" });
       return;
     }
 
+    // Check if the email is valid
+    if (!emailRegex.test(req.body.email)) {
+      res.json({ result: false, error: "Invalid email" });
+      return;
+    }
+    // Find the user
     const userData = await User.findOne(
       { email: req.body.email }
     );
+    // Check if the user exists and the password is correct
     if (userData && bcrypt.compareSync(req.body.password, userData.password)) {
+      
       res.json({ result: true, token: userData.token });
     } else {
       res.json({ result: false, error: "User not found or wrong password" });
     }
+    
   } catch (error) {
     // Handle any errors
     res
