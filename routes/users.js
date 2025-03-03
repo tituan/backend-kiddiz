@@ -6,9 +6,7 @@ const { checkBody } = require("../modules/checkBody");
 const jwt = require("jsonwebtoken");
 const moment = require("moment");
 const bcrypt = require("bcrypt");
-const nodemailer = require("nodemailer") ;
-
-
+const nodemailer = require("nodemailer");
 
 // Regex to validate email
 const emailRegex =
@@ -16,18 +14,17 @@ const emailRegex =
 
 router.post("/signup", async (req, res) => {
   try {
-
     //clean all  req.body is correct withouth spaces
-      const cleanedBody = {
-        firstname: req.body.firstname?.trim() || '',
-        lastname: req.body.lastname?.trim() || '',
-        email: req.body.email?.trim() || '',
-        password: req.body.password,
-        confirmPassword: req.body.confirmPassword,
-        dateOfBirth: req.body.dateOfBirth, 
-        conditionUtilisation: req.body.conditionUtilisation,
-        publicy: req.body.publicy,
-      }
+    const cleanedBody = {
+      firstname: req.body.firstname?.trim() || "",
+      lastname: req.body.lastname?.trim() || "",
+      email: req.body.email?.trim() || "",
+      password: req.body.password,
+      confirmPassword: req.body.confirmPassword,
+      dateOfBirth: req.body.dateOfBirth,
+      conditionUtilisation: req.body.conditionUtilisation,
+      publicy: req.body.publicy,
+    };
 
     // check if the body is correct
     if (
@@ -44,8 +41,11 @@ router.post("/signup", async (req, res) => {
     }
 
     // check if the user accepted the terms and conditions
-    if(!Boolean(req.body.conditionUtilisation) && !Boolean(req.body.publicy) ){
-      return res.json({ result: false, error: "You must accept the terms and conditions" });
+    if (!Boolean(req.body.conditionUtilisation) && !Boolean(req.body.publicy)) {
+      return res.json({
+        result: false,
+        error: "You must accept the terms and conditions",
+      });
     }
 
     // check if the email is valid
@@ -64,15 +64,18 @@ router.post("/signup", async (req, res) => {
     if (cleanedBody.password !== cleanedBody.confirmPassword) {
       return res.json({ result: false, error: "Passwords do not match" });
     }
-   
 
     // hash the password
     const hash = bcrypt.hashSync(cleanedBody.password, 10);
 
     // Ggenerate a token
-    const token = jwt.sign({ email: cleanedBody.email }, process.env.JWT_SECRET, {
-      expiresIn: "1y",
-    });
+    const token = jwt.sign(
+      { email: cleanedBody.email },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1y",
+      }
+    );
 
     // format the date of birth
     const dateOfBirth = moment(
@@ -82,7 +85,6 @@ router.post("/signup", async (req, res) => {
     );
 
     const { firstname, lastname, email } = cleanedBody;
-
 
     // create a new user
     const newUser = new User({
@@ -114,31 +116,27 @@ router.post("/signup", async (req, res) => {
       },
     });
 
-      // Send an email to the user
+    // Send an email to the user
     const mailToClient = {
       from: process.env.EMAIL_FROM,
       to: cleanedBody.email, // Email du client
       subject: "Accusé de réception de votre demande",
-        text: `Bonjour ${userResponse.firstname},\nNous avons le plaisir de vous compter parmis nous et vous souhaitons d'agréable moments chez KIDDIZ !! `
-      };
-  
-      await transporter.sendMail(mailToClient);
+      text: `Bonjour ${userResponse.firstname},\nNous avons le plaisir de vous compter parmis nous et vous souhaitons d'agréable moments chez KIDDIZ !! `,
+    };
+
+    await transporter.sendMail(mailToClient);
 
     // Respond with the user data
     res.json({ result: true, userResponse });
   } catch (error) {
     // Handle any errors
-    res
-      .status(500)
-      .json({
-        result: false,
-        message: "An error has occurred.",
-        error: error.message,
-      });
+    res.status(500).json({
+      result: false,
+      message: "An error has occurred.",
+      error: error.message,
+    });
   }
 });
-
-
 
 router.post("/signin", async (req, res) => {
   try {
@@ -154,26 +152,20 @@ router.post("/signin", async (req, res) => {
       return;
     }
     // Find the user
-    const userData = await User.findOne(
-      { email: req.body.email }
-    );
+    const userData = await User.findOne({ email: req.body.email });
     // Check if the user exists and the password is correct
     if (userData && bcrypt.compareSync(req.body.password, userData.password)) {
-      
       res.json({ result: true, token: userData.token });
     } else {
       res.json({ result: false, error: "User not found or wrong password" });
     }
-    
   } catch (error) {
     // Handle any errors
-    res
-      .status(500)
-      .json({
-        result: false,
-        message: "An error has occurred.",
-        error: error.message,
-      });
+    res.status(500).json({
+      result: false,
+      message: "An error has occurred.",
+      error: error.message,
+    });
   }
 });
 
