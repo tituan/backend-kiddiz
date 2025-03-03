@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 
+const { Schema } = mongoose;
+
 const addressSchema = new Schema({
   number: { type: Number },
   line1: { type: String },
@@ -38,6 +40,7 @@ const userSchema = mongoose.Schema({
     default: "active",
   },
 });
+
 
 const User = mongoose.model("users", userSchema);
 
