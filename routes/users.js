@@ -1,46 +1,58 @@
-var express = require('express');
+var express = require("express");
 var router = express.Router();
-require('../models/connection');
-const User = require('../models/users.js');
-const { checkBody } = require('../modules/checkBody');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
-
+require("../models/connection");
+const User = require("../models/users.js");
+const { checkBody } = require("../modules/checkBody");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 
 // Regex pour valider un format d'email
-const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+const emailRegex =
+  /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
-
-router.post('/signup', async (req, res) => {
-
+router.post("/signup", async (req, res) => {
   try {
-
     // Check if any require fields are empty
-    if (!checkBody(req.body, ['firstname', 'password', 'lastname', 'email', 'dateOfBirth', 'confirmPassword'])) {
-      res.json({ result: false, error: 'Missing or empty fields' });
+    if (
+      !checkBody(req.body, [
+        "firstname",
+        "password",
+        "lastname",
+        "email",
+        "dateOfBirth",
+        "confirmPassword",
+      ])
+    ) {
+      res.json({ result: false, error: "Missing or empty fields" });
       return;
     }
 
     //Check the email format
     if (!emailRegex.test(req.body.email)) {
-      return res.json({ result: false, error: 'Invalid email format' });
+      return res.json({ result: false, error: "Invalid email format" });
     }
+
+    // Check if the password and confirm password are the same
+    if (req.body.password !== req.body.confirmPassword) {
+      return res.json({ result: false, error: "Passwords do not match" });
+    }
+
     // Check if the user has not already been registered
-    const existingUser = await User.findOne({ email: req.body.email })
-    if (existingUser === null && req.body.password === req.body.confirmPassword) {
+    const existingUser = await User.findOne({ email: req.body.email });
+    if (
+      existingUser === null      
+    ) {
       const hash = bcrypt.hashSync(req.body.password, 10);
 
       // Clean code
       const { firstname, lastname, email, dateOfBirth } = req.body;
 
       //Create tokenUser with JWT
-      const token = jwt.sign(
-        { email: email },
-        JWT_SECRET,
-        { expiresIn: '1year' }
-      );
+      const token = jwt.sign({ email: email }, JWT_SECRET, {
+        expiresIn: "1year",
+      });
 
-      // Creat newUszer using user schema
+      // Creat newUser using user schema
       const newUser = new User({
         firstname,
         lastname,
@@ -53,37 +65,52 @@ router.post('/signup', async (req, res) => {
       const savedUser = await newUser.save();
 
       res.json({ result: true, savedUser });
-
     } else {
       // User already exists in database
-      res.json({ result: false, error: 'User already exists' });
-    };
-  }
-  catch (error) {
+      res.json({ result: false, error: "User already exists" });
+    }
+  } catch (error) {
     // Gérer les erreurs éventuelles
-    res.status(500).json({ result: false, message: 'An error has occurred.', error });
+    res
+      .status(500)
+      .json({ result: false, message: "An error has occurred.", error });
   }
 });
 
-
-router.post('/signin', async (req, res) => {
+router.post("/signin", async (req, res) => {
   try {
-    if (!checkBody(req.body, ['email', 'password'])) {
-      res.json({ result: false, error: 'Missing or empty fields' });
+
+    // Check if any require fields are empty
+    if (!checkBody(req.body, ["email", "password"])) {
+      res.json({ result: false, error: "Missing or empty fields" });
       return;
     }
 
-    const userData = await User.findOne({ email: req.body.username } && { admin: true })
+    //Check the email format
+    if (!emailRegex.test(req.body.email)) {
+      return res.json({ result: false, error: "Invalid email format" });
+    }
+
+    // Check if the user has not already been registered
+    const userData = await User.findOne(
+      { email: req.body.email } 
+    );
+
+    // Check if the user exists and the password is correct
     if (userData && bcrypt.compareSync(req.body.password, data.password)) {
       res.json({ result: true, token: data.token });
     } else {
-      res.json({ result: false, error: 'User not found or wrong password' });
+      res.json({ result: false, error: "User not found or wrong password" });
     }
-    ;
-
   } catch (error) {
     // Handle any errors
-    res.status(500).json({ result: false, message: 'An error has occurred.', error: error.message });
+    res
+      .status(500)
+      .json({
+        result: false,
+        message: "An error has occurred.",
+        error: error.message,
+      });
   }
 });
 

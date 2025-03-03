@@ -24,7 +24,7 @@ const userSchema = mongoose.Schema({
   lastname: { type: String },
   password: { type: String },
   token: { type: String },
-  dateOfBirth: { type: Date },
+  dateOfBirth: { type: String },
   registrationDate: { type: Date },
   address: addressSchema, // Intégration du sous-schéma d'adresse
   picture: { type: String },
