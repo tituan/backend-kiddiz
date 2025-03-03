@@ -22,7 +22,6 @@ const userSchema = mongoose.Schema({
   password: { type: String },
   firstname: { type: String },
   lastname: { type: String },
-  password: { type: String },
   token: { type: String },
   dateOfBirth: { type: String },
   registrationDate: { type: Date },
