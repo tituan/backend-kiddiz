@@ -31,11 +31,16 @@ router.post("/signup", async (req, res) => {
     if (!emailRegex.test(req.body.email)) {
       return res.json({ result: false, error: "Invalid email format" });
     }
+
+    // Check if the password and confirm password are the same
+    if (req.body.password !== req.body.confirmPassword) {
+      return res.json({ result: false, error: "Passwords do not match" });
+    }
+
     // Check if the user has not already been registered
     const existingUser = await User.findOne({ email: req.body.email });
     if (
-      existingUser === null &&
-      req.body.password === req.body.confirmPassword
+      existingUser === null      
     ) {
       const hash = bcrypt.hashSync(req.body.password, 10);
 
@@ -74,6 +79,8 @@ router.post("/signup", async (req, res) => {
 
 router.post("/signin", async (req, res) => {
   try {
+
+    // Check if any require fields are empty
     if (!checkBody(req.body, ["email", "password"])) {
       res.json({ result: false, error: "Missing or empty fields" });
       return;
@@ -84,9 +91,12 @@ router.post("/signin", async (req, res) => {
       return res.json({ result: false, error: "Invalid email format" });
     }
 
+    // Check if the user has not already been registered
     const userData = await User.findOne(
       { email: req.body.email } 
     );
+
+    // Check if the user exists and the password is correct
     if (userData && bcrypt.compareSync(req.body.password, data.password)) {
       res.json({ result: true, token: data.token });
     } else {
