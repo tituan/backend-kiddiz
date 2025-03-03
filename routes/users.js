@@ -26,7 +26,7 @@ router.post('/signup', async (req, res) => {
       return res.json({ result: false, error: 'Invalid email format' });
     }
     // Check if the user has not already been registered
-    const existingUser = await User.findOne({ username: req.body.username })
+    const existingUser = await User.findOne({ email: req.body.email })
     if (existingUser === null && req.body.password === req.body.confirmPassword) {
         const hash = bcrypt.hashSync(req.body.password, 10);
 
