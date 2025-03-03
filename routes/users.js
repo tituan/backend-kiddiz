@@ -13,9 +13,19 @@ const emailRegex =
 
 router.post("/signup", async (req, res) => {
   try {
+
+    //clean all  req.body is correct withouth spaces
+      const cleanedBody = {
+        firstname: req.body.firstname?.trim() || '',
+        lastname: req.body.lastname?.trim() || '',
+        email: req.body.email?.trim() || '',
+        password: req.body.password?.trim() || '',
+        confirmPassword: req.body.confirmPassword?.trim() || '',
+        dateOfBirth: req.body.dateOfBirth, 
+
     // check if the body is correct
     if (
-      !checkBody(req.body, [
+      !checkBody(cleanedBody [
         "firstname",
         "password",
         "confirmPassword",
@@ -27,30 +37,28 @@ router.post("/signup", async (req, res) => {
       return res.json({ result: false, error: "Missing or empty fields" });
     }
     // check if the email is valid
-    if (!emailRegex.test(req.body.email)) {
+    if (!emailRegex.test(cleanedBody.email)) {
       return res.json({ result: false, error: "Invalid email" });
     }
 
     // checke if the user exists
-    const existingUser = await User.findOne({ email: req.body.email });
+    const existingUser = await User.findOne({ email: cleanedBody.email });
 
     if (existingUser) {
       return res.json({ result: false, error: "User already exists" });
     }
 
     // check if the password and confirmPassword are the same
-    if (req.body.password !== req.body.confirmPassword) {
+    if (cleanedBody.password !== cleanedBody.confirmPassword) {
       return res.json({ result: false, error: "Passwords do not match" });
     }
-    // clean code
-    const { username, firstname, lastname, email, password, confirmPassword } =
-      req.body;
+   
 
     // hash the password
     const hash = bcrypt.hashSync(password, 10);
 
     // Ggenerate a token
-    const token = jwt.sign({ email: req.body.email }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ email: cleanedBody.email }, process.env.JWT_SECRET, {
       expiresIn: "1y",
     });
 
@@ -66,7 +74,6 @@ router.post("/signup", async (req, res) => {
       username,
       firstname,
       lastname,
-      
       email,
       dateOfBirth,
       password: hash,
