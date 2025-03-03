@@ -107,10 +107,10 @@ router.post("/signin", async (req, res) => {
     }
 
     const userData = await User.findOne(
-      { email: req.body.username } && { admin: true }
+      { email: req.body.email }
     );
-    if (userData && bcrypt.compareSync(req.body.password, data.password)) {
-      res.json({ result: true, token: data.token });
+    if (userData && bcrypt.compareSync(req.body.password, userData.password)) {
+      res.json({ result: true, token: userData.token });
     } else {
       res.json({ result: false, error: "User not found or wrong password" });
     }
