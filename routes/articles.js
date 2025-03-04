@@ -2,7 +2,6 @@ var express = require("express");
 var router = express.Router();
 const User = require("../models/users.js");
 const Article = require("../models/articles.js");
-const FavoriteArticle = require("../models/favoriteArticles.js");
 const { checkBody } = require("../modules/checkBody");
 const mongoose = require("mongoose");
 const uniqid = require("uniqid");
@@ -135,7 +134,7 @@ router.get('/', async (req, res) => {
 
         // display all the articles
         const articles = await Article.find()
-            .populate('user', 'firstname note address.city -_id');;
+            .populate('user', 'firstname note address.city -_id');
 
         // selection of the informations i want to share
         const articlesResponse = articles.map((article) => ({
@@ -161,24 +160,25 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Display article by ID
-router.get('/:id', async (req, res) => {
+// Display articles by likes
+router.get('/popular', async (req, res) => {
 
     try {
 
-        const article = await Article.findById(req.params.id)
-            .populate('user', 'firstname note address.city -_id');
+        const articles = await Article.find()
+            .populate('user', 'firstname note address.city -_id')
+            .sort({ 'usersLikers': -1 }); // Trier par nombre de likes
 
         // Check if the id is exist in database
-        if (!article) {
+        if (!articles || articles.length === 0) {
             return res
                 .status(404)
-                .json({ result: false, error: "Article not found" });
+                .json({ result: false, error: "No articles not found" });
         }
 
-        // selection of the informations i want to share
-        const articleResponse = {
-            id: article.id,
+        // Mapper les articles pour ne renvoyer que les informations souhaitées
+        const articlesResponse = articles.map(article => ({
+            id: article._id,
             title: article.title,
             productDescription: article.productDescription,
             category: article.category,
@@ -187,10 +187,11 @@ router.get('/:id', async (req, res) => {
             price: article.price,
             pictures: article.pictures,
             articleCreationDate: article.articleCreationDate,
-            user: article.user,
-        };
+            likesCount: article.usersLikers.length, // Ajout du nombre de likes
+            user: article.user
+        }));
 
-        res.json({ result: true, article: articleResponse });
+        res.json({ result: true, article: articlesResponse });
 
     } catch (error) {
         res
@@ -203,15 +204,15 @@ router.get('/:id', async (req, res) => {
     }
 })
 
-// Display articles by likes
+// Display article by ID
 router.get('/:id', async (req, res) => {
 
     try {
 
-        const article = await Article.find(req.params.id)
+        const article = await Article.findById(req.params.id)
             .populate('user', 'firstname note address.city -_id');
 
-        // Check if the id is exist in database
+        // Check if the id exist in database
         if (!article) {
             return res
                 .status(404)
