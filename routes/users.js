@@ -3,10 +3,11 @@ var router = express.Router();
 require("../models/connection");
 const User = require("../models/users.js");
 const { checkBody } = require("../modules/checkBody");
-const jwt = require("jsonwebtoken");
+// const jwt = require("jsonwebtoken");
 const moment = require("moment");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
+const uid2 = require('uid2');
 
 // Regex to validate email
 const emailRegex =
@@ -40,6 +41,14 @@ router.post("/signup", async (req, res) => {
       return res.json({ result: false, error: "Missing or empty fields" });
     }
 
+    // check if the password length is greater than 5 characters
+    if (cleanedBody.password.length < 5) {
+      return res.json({
+        result: false,
+        error: "Password must be at least 5 characters long",
+      });
+    }
+
     // check if the user accepted the terms and conditions
     if (!Boolean(req.body.conditionUtilisation) && !Boolean(req.body.publicy)) {
       return res.json({
@@ -68,14 +77,14 @@ router.post("/signup", async (req, res) => {
     // hash the password
     const hash = bcrypt.hashSync(cleanedBody.password, 10);
 
-    // Ggenerate a token
-    const token = jwt.sign(
-      { email: cleanedBody.email },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "1y",
-      }
-    );
+    // Ggenerate a token NOT USED FOR V1
+    // const token = jwt.sign(
+    //   { email: cleanedBody.email },
+    //   process.env.JWT_SECRET,
+    //   {
+    //     expiresIn: "1y",
+    //   }
+    // );
 
     // format the date of birth
     const dateOfBirth = moment(
@@ -93,7 +102,7 @@ router.post("/signup", async (req, res) => {
       email,
       dateOfBirth,
       password: hash,
-      token: token,
+      token: uid2(32),
     });
 
     // Save the user
@@ -104,8 +113,20 @@ router.post("/signup", async (req, res) => {
       lastname: savedUser.lastname,
       email: savedUser.email,
       dateOfBirth: savedUser.dateOfBirth,
+      token: savedUser.token,
     };
     // Send an email configuration to the user
+    /**
+     * Creates a Nodemailer transporter object using SMTP configuration from environment variables.
+     * 
+     * @constant {Object} transporter - The Nodemailer transporter object.
+     * @property {string} host - The SMTP server hostname, taken from the environment variable `SMTP_HOST`.
+     * @property {number} port - The SMTP server port, taken from the environment variable `SMTP_PORT`.
+     * @property {boolean} secure - Indicates if the connection should use SSL/TLS.
+     * @property {Object} auth - The authentication object.
+     * @property {string} auth.user - The username for authentication, taken from the environment variable `SMTP_USER`.
+     * @property {string} auth.pass - The password for authentication, taken from the environment variable `SMTP_PASS`.
+     */
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT),
@@ -117,6 +138,15 @@ router.post("/signup", async (req, res) => {
     });
 
     // Send an email to the user
+    /**
+     * Email object to be sent to the client.
+     * 
+     * @typedef {Object} MailToClient
+     * @property {string} from - The sender's email address, retrieved from environment variables.
+     * @property {string} to - The recipient's email address, taken from the cleaned request body.
+     * @property {string} subject - The subject of the email.
+     * @property {string} text - The body of the email, including a personalized greeting.
+     */
     const mailToClient = {
       from: process.env.EMAIL_FROM,
       to: cleanedBody.email, // Email du client
@@ -153,12 +183,62 @@ router.post("/signin", async (req, res) => {
     }
     // Find the user
     const userData = await User.findOne({ email: req.body.email });
+    
     // Check if the user exists and the password is correct
     if (userData && bcrypt.compareSync(req.body.password, userData.password)) {
-      res.json({ result: true, token: userData.token });
+      res.json({ result: true, userData });
     } else {
       res.json({ result: false, error: "User not found or wrong password" });
     }
+  } catch (error) {
+    // Handle any errors
+    res.status(500).json({
+      result: false,
+      message: "An error has occurred.",
+      error: error.message,
+    });
+  }
+});
+
+router.put("/update/:token", async (req, res) => {
+  try {
+    
+    // Clean all the fields
+    const cleanedAddress = {
+      number: req.body.number?.trim() || '',
+      line1: req.body.line1?.trim() || '',
+      line2: req.body.line2?.trim() || '',
+      zipCode: req.body.zipCode?.trim() || '',
+      city: req.body.city?.trim() || '',
+      state: req.body.state?.trim() || '',
+      country: req.body.country?.trim() || '',
+    };
+
+    // Check if the body is correct
+    if (!checkBody(cleanedAddress, ['number', 'line1', 'zipCode', 'city'])) {
+      return res.json({ result: false, error: 'Missing or empty address fields' });
+    }
+
+    // Find the user
+    const userId = req.params.token;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ result: false, error: 'User not found' });
+    }
+
+    user.address = cleanedAddress;
+    const updatedUser = await user.save();
+
+    const userResponse = {
+      firstname: updatedUser.firstname,
+      lastname: updatedUser.lastname,
+      email: updatedUser.email,
+      address: updatedUser.address, 
+    };
+
+    res.json({ result: true, userResponse });
+
   } catch (error) {
     // Handle any errors
     res.status(500).json({

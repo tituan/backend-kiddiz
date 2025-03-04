@@ -5,7 +5,7 @@ const { Schema } = mongoose;
 const addressSchema = new Schema({
   number: { type: Number },
   line1: { type: String },
-  line2: { type: String }, // Optionnel
+  line2: { type: String }, // Optionnal
   zipCode: { type: Number },
   city: { type: String },
   state: { type: String },
@@ -25,14 +25,14 @@ const userSchema = mongoose.Schema({
   token: { type: String },
   dateOfBirth: { type: String },
   registrationDate: { type: Date },
-  address: addressSchema, // Intégration du sous-schéma d'adresse
+  address: addressSchema, // Adress of the user
   picture: { type: String },
   phoneNumber: Number,
   note: { type: String },
   followers: [{ type: Schema.Types.ObjectId, ref: "User" }],
   stripeCustomerId: { type: String },
   socketId: { type: String },
-  terms: termsSchema,
+  terms: termsSchema, // Terms and conditions
   status: {
     type: String,
     enum: ["active", "banned", "pending"],

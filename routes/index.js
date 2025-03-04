@@ -9,6 +9,7 @@ router.get('/', function(req, res, next) {
 
 const crypto = require('crypto');
 
-const secret = crypto.randomBytes(32).toString('hex');
-console.log(secret);
+// Generate a random secret
+// const secret = crypto.randomBytes(32).toString('hex');
+// console.log(secret);
 module.exports = router;
