@@ -23,7 +23,7 @@ const userSchema = mongoose.Schema({
   firstname: { type: String },
   lastname: { type: String },
   token: { type: String },
-  dateOfBirth: { type: String },
+  dateOfBirth: { type: Date },
   registrationDate: { type: Date },
   address: addressSchema, // Adress of the user
   picture: { type: String },
