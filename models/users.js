@@ -29,7 +29,7 @@ const userSchema = mongoose.Schema({
   picture: { type: String },
   phoneNumber: Number,
   note: { type: String },
-  followers: [{ type: Schema.Types.ObjectId, ref: "User" }],
+  followers: [{ type: Schema.Types.ObjectId, ref: "users" }],
   stripeCustomerId: { type: String },
   socketId: { type: String },
   terms: termsSchema, // Terms and conditions

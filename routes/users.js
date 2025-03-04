@@ -158,7 +158,8 @@ router.post("/signup", async (req, res) => {
     await transporter.sendMail(mailToClient);
     console.log(mailToClient)
     // Respond with the user data
-    
+    res.json({ result: true, userResponse });
+    console.log(userResponse);
   } catch (error) {
     // Handle any errors
     res.status(500).json({
