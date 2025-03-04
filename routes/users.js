@@ -8,6 +8,7 @@ const moment = require("moment");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const uid2 = require('uid2');
+const { OAuth2Client } = require('google-auth-library');
 
 // Regex to validate email
 const emailRegex =
@@ -170,7 +171,52 @@ router.post("/signup", async (req, res) => {
   }
 });
 
-router.post("/sign")
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+async function verifyGoogleToken(token) {
+  const ticket = await client.verifyIdToken({
+    idToken: token,
+    audience: process.env.GOOGLE_CLIENT_ID,
+  });
+  const payload = ticket.getPayload();
+  return {
+    email: payload.email,
+    name: payload.name,
+    googleId: payload.sub, // ID Google
+  };
+}
+
+router.post('/signupGoogle', async (req, res) => {
+  const { token } = req.body;
+
+  try {
+    const userData = await verifyGoogleToken(token);
+    const { email, name, googleId } = userData;
+
+    // check if the user exists
+    let user = await User.findOne({ email });
+    if (user) {
+      return res.status(400).json({ message: "Utilisateur déjà existant, essayez de vous connecter." });
+    }
+
+    // Create a new user
+    user = new User({
+      email,
+      name,
+      googleId,
+      // password not required
+    });
+    await user.save();
+
+    // Générer un token JWT ou une session pour l'utilisateur
+    const userToken = uid2(32); // Génère un token unique de 32 caractères
+    user.token = userToken;
+    res.json({ token: userToken, user });
+  } catch (error) {
+    res.status(500).json({ message: "Erreur lors du Sign Up", error });
+  }
+});
+
 
 router.post("/signin", async (req, res) => {
   try {
