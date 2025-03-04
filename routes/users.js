@@ -7,6 +7,7 @@ const { checkBody } = require("../modules/checkBody");
 const moment = require("moment");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
+const uid2 = require('uid2');
 
 // Regex to validate email
 const emailRegex =
@@ -76,14 +77,14 @@ router.post("/signup", async (req, res) => {
     // hash the password
     const hash = bcrypt.hashSync(cleanedBody.password, 10);
 
-    // Ggenerate a token
-    const token = jwt.sign(
-      { email: cleanedBody.email },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "1y",
-      }
-    );
+    // Ggenerate a token NOT USED FOR V1
+    // const token = jwt.sign(
+    //   { email: cleanedBody.email },
+    //   process.env.JWT_SECRET,
+    //   {
+    //     expiresIn: "1y",
+    //   }
+    // );
 
     // format the date of birth
     const dateOfBirth = moment(
@@ -101,7 +102,7 @@ router.post("/signup", async (req, res) => {
       email,
       dateOfBirth,
       password: hash,
-      token: token,
+      token: uid2(32),
     });
 
     // Save the user
@@ -112,6 +113,7 @@ router.post("/signup", async (req, res) => {
       lastname: savedUser.lastname,
       email: savedUser.email,
       dateOfBirth: savedUser.dateOfBirth,
+      token: savedUser.token,
     };
     // Send an email configuration to the user
     /**

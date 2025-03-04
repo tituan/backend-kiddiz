@@ -4,6 +4,7 @@ const User = require("../models/users.js");
 const Article = require("../models/articles.js");
 const { checkBody } = require("../modules/checkBody");
 const mongoose = require("mongoose");
+const cloudinary = require("cloudinary").v2;
 
 
 router.post('/', async (req, res) => {
@@ -23,7 +24,8 @@ router.post('/', async (req, res) => {
             return res.json({ result: false, error: "Missing or empty fields" });
         }
 
-        const { user, title, productDescription, category, itemType, condition, price, pictures } = req.body;
+        const { user, title, productDescription, category, itemType, condition, price } = req.body;
+        const {pictures} = req.files.pictures ;
 
         // Price must be a positive number
         if (price < 0) {
@@ -39,6 +41,25 @@ router.post('/', async (req, res) => {
         if (!mongoose.Types.ObjectId.isValid(user)) {
             return res.status(400).json({ result: false, error: "Invalid user ID format" });
         }
+
+        // send the pictures to cloudinary
+        const photoPath = `./tmp/${uniqid()}.jpg`;
+
+        console.log(req.files);
+        // check if the picture is present
+          if (!req.files.pictures) {
+            res.json({ result: false, error: "Pas de photo" });
+          }
+          const resultMove = await req.files.pictures.mv(photoPath);
+          // check if the picture is moved
+          if (!resultMove) {
+            const resultCloudinary = await cloudinary.uploader.upload(photoPath);
+            fs.unlinkSync(photoPath);
+      
+            res.json({ result: true, url: resultCloudinary.secure_url });
+          } else {
+            res.json({ result: false, error: resultMove });
+          }
 
         // create a new article
         const newArticle = new Article({
