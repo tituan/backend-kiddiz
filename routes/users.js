@@ -186,7 +186,7 @@ router.post("/signin", async (req, res) => {
     
     // Check if the user exists and the password is correct
     if (userData && bcrypt.compareSync(req.body.password, userData.password)) {
-      res.json({ result: true, token: userData.token });
+      res.json({ result: true, userData });
     } else {
       res.json({ result: false, error: "User not found or wrong password" });
     }
