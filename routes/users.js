@@ -107,11 +107,6 @@ router.post("/signup", async (req, res) => {
     // Save the user
     const savedUser = await newUser.save();
 
-    // Format the date of birth
-    let formattedDateOfBirth = "";
-    const momentDate = moment(savedUser.dateOfBirth)
-    formattedDateOfBirth = momentDate.format("DD-MM-YYYY");
-
     const userResponse = {
       firstname: savedUser.firstname,
       lastname: savedUser.lastname,
