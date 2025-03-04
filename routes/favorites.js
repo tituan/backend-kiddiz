@@ -5,7 +5,7 @@ const Article = require("../models/articles.js");
 const mongoose = require("mongoose");
 const FavoriteArticle = require("../models/favoriteArticles.js");
 
-// User like an Article
+// User likes an Article
 router.post('/', async (req, res) => {
 
     try {
@@ -29,39 +29,42 @@ router.post('/', async (req, res) => {
             return res.status(404).json({ result: false, error: "Article not found" });
         }
 
-        // Vérifier si un enregistrement favori existe déjà pour l'utilisateur
-        let favorite = await FavoriteArticle.findOne({ user: user._id });
+        const favoriteArticles = await FavoriteArticle.findOne({ user: user._id })
+        
+        // Si cet utilisateur n'a jamais liké d'articles
+        if (!favoriteArticles) {
 
-        if (!favorite) {
+            // On le crée sous forme d'objet, ([articleId] car le schéma favoriteArticle attend un tableau)
+            const newFavorite = new FavoriteArticle({ user: user._id, articles: [articleId] });
 
-            // Si aucun enregistrement, on le crée sous forme d'objet, ([articleId] car le schéma favoriteArticle attend un tableau)
-            favorite = new FavoriteArticle({ user: user._id, articles: [articleId] });
+            await newFavorite.save();
+
+            // Et on ajoute l'id de l'utilisateur dans le tableau usersLikers de l'article
+            await Article.updateOne({ _id: article._id }, { $addToSet: { usersLikers: user._id } })
+
+            return res.status(201).json({ result: true, message: "Article added to favorites and user created in likers array" })
+        
+        // Sinon si l'article est déjà liké
+        } else if (favoriteArticles.articles.some((e) => e.toString() === articleId)) {
+
+            // On retire l'article de la liste de like de l'utilisateur
+            await FavoriteArticle.updateOne({ _id: favoriteArticles._id }, { $pull: { articles: articleId }});
+
+            // on retire le user du tableau userLikers 
+            await Article.updateOne({ _id: article._id }, { $pull: { usersLikers: user._id } })
+
+            return res.status(200).json({ result: true, message: "Article removed from favorites and user removed from likers" });
 
         } else {
 
-            // Si l'article est déjà liké on ajoute la mécanique de délike 
-            if (favorite.articles.includes(articleId)) {
+            // Sinon on ajoute l'article dans la liste favoriteArticles du user
+            await FavoriteArticle.updateOne({ _id: favoriteArticles._id }, { $addToSet: { articles: articleId }});
 
-                // On retire l'article de sa liste de favoris
-                favorite.articles = favorite.articles.filter(id => id.toString() !== articleId.toString())
+            // et on ajoute le user dans le tableau usersLikers 
+            await Article.updateOne({ _id: article._id }, { $addToSet: { usersLikers: user._id } })
 
-                // Si plus aucun article n'est en favori, supprimer l'entrée FavoriteArticle car il n'y aurait plus qu'un user avec un tableau vide
-                if (favorite.articles.length === 0) {
-                    await FavoriteArticle.findByIdAndDelete(favorite._id);
-                    return res.json({ result: true, message: "No more favorites" });
-                }
-
-            } else {
-
-                // Sinon, on ajoute l'article à sa liste de favoris
-                favorite.articles.push(articleId);
-            }
+            return res.status(200).json({ result: true, message: "Article added to favorites and user added to likers" })
         }
-
-        // Sauvegarde en base
-        await favorite.save();
-
-        res.json({ result: true, message: "Article added to favorites", favorite });
 
     } catch (error) {
         res.status(500).json({ result: false, error: error.message });
