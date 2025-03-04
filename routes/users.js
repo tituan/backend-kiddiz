@@ -170,6 +170,8 @@ router.post("/signup", async (req, res) => {
   }
 });
 
+router.post("/sign")
+
 router.post("/signin", async (req, res) => {
   try {
     // Check if the body is correct
@@ -250,5 +252,7 @@ router.put("/update/:token", async (req, res) => {
     });
   }
 });
+
+
 
 module.exports = router;
