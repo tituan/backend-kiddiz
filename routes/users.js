@@ -115,7 +115,7 @@ router.post("/signup", async (req, res) => {
       token: savedUser.token,
     };
 
-    res.json({ result: true, userResponse });
+   
     // Send an email configuration to the user
     /**
      * Creates a Nodemailer transporter object using SMTP configuration from environment variables.
