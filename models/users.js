@@ -23,13 +23,13 @@ const userSchema = mongoose.Schema({
   firstname: { type: String },
   lastname: { type: String },
   token: { type: String },
-  dateOfBirth: { type: String },
+  dateOfBirth: { type: Date },
   registrationDate: { type: Date },
   address: addressSchema, // Adress of the user
   picture: { type: String },
   phoneNumber: Number,
   note: { type: String },
-  followers: [{ type: Schema.Types.ObjectId, ref: "User" }],
+  followers: [{ type: Schema.Types.ObjectId, ref: "users" }],
   stripeCustomerId: { type: String },
   socketId: { type: String },
   terms: termsSchema, // Terms and conditions
