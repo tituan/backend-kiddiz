@@ -204,6 +204,51 @@ router.get('/popular', async (req, res) => {
     }
 })
 
+// Display article by Seller
+router.get('/:email', async (req, res) => {
+
+    try {
+
+        const user = await User.findOne({ email: req.params.email })
+
+        const articles = await Article.find({user: user._id})
+            .populate('user', 'firstname note address.city -_id')
+    
+        // Check if the id is exist in database
+        if (!articles || articles.length === 0) {
+            return res
+                .status(404)
+                .json({ result: false, error: "No articles not found" });
+        }
+
+        // Mapper les articles pour ne renvoyer que les informations souhaitées
+        const articlesResponse = articles.map(article => ({
+            id: article._id,
+            title: article.title,
+            productDescription: article.productDescription,
+            category: article.category,
+            itemType: article.itemType,
+            condition: article.condition,
+            price: article.price,
+            pictures: article.pictures,
+            articleCreationDate: article.articleCreationDate,
+            likesCount: article.usersLikers.length, // Ajout du nombre de likes
+            user: article.user
+        }));
+
+        res.json({ result: true, article: articlesResponse });
+
+    } catch (error) {
+        res
+            .status(500)
+            .json({
+                result: false,
+                message: "An error has occurred.",
+                error: error.message,
+            });
+    }
+})
+
 // Display article by ID
 router.get('/:id', async (req, res) => {
 
