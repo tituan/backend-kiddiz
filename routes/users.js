@@ -169,4 +169,53 @@ router.post("/signin", async (req, res) => {
   }
 });
 
+router.put("/update/:token", async (req, res) => {
+  try {
+    
+    // Clean all the fields
+    const cleanedAddress = {
+      number: req.body.number?.trim() || '',
+      line1: req.body.line1?.trim() || '',
+      line2: req.body.line2?.trim() || '',
+      zipCode: req.body.zipCode?.trim() || '',
+      city: req.body.city?.trim() || '',
+      state: req.body.state?.trim() || '',
+      country: req.body.country?.trim() || '',
+    };
+
+    // Check if the body is correct
+    if (!checkBody(cleanedAddress, ['number', 'line1', 'zipCode', 'city'])) {
+      return res.json({ result: false, error: 'Missing or empty address fields' });
+    }
+
+    // Find the user
+    const userId = req.params.token;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ result: false, error: 'User not found' });
+    }
+
+    user.address = cleanedAddress;
+    const updatedUser = await user.save();
+
+    const userResponse = {
+      firstname: updatedUser.firstname,
+      lastname: updatedUser.lastname,
+      email: updatedUser.email,
+      address: updatedUser.address, 
+    };
+
+    res.json({ result: true, userResponse });
+
+  } catch (error) {
+    // Handle any errors
+    res.status(500).json({
+      result: false,
+      message: "An error has occurred.",
+      error: error.message,
+    });
+  }
+});
+
 module.exports = router;
