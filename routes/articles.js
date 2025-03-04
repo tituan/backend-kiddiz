@@ -89,7 +89,7 @@ router.get('/', async (req, res) => {
 
         // display all the articles
         const articles = await Article.find()
-            .populate('user', 'email firstname lastname -_id');;
+            .populate('user', 'firstname note address.city -_id');;
 
         // selection of the informations i want to share
         const articlesResponse = articles.map(article => ({
@@ -124,7 +124,7 @@ router.get('/:id', async (req, res) => {
     try {
 
         const article = await Article.findById(req.params.id)
-            .populate('user', 'email firstname lastname -_id');
+            .populate('user', 'firstname note address.city -_id');
 
         // Check if the id is exist in database
         if (!article) {
