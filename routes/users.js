@@ -116,7 +116,7 @@ router.post("/signup", async (req, res) => {
       firstname: savedUser.firstname,
       lastname: savedUser.lastname,
       email: savedUser.email,
-      dateOfBirth: formattedDateOfBirth,
+      dateOfBirth: savedUser.dateOfBirth,
       token: savedUser.token,
     };
 
@@ -161,7 +161,7 @@ router.post("/signup", async (req, res) => {
     };
 
     await transporter.sendMail(mailToClient);
-    console.log(mailToClient)
+    
     // Respond with the user data
     res.json({ result: true, userResponse });
     console.log(userResponse);
