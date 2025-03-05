@@ -8,6 +8,7 @@ const uniqid = require("uniqid");
 const cloudinary = require("cloudinary").v2;
 const fs = require("fs");
 
+// Create an article
 router.post("/", async (req, res) => {
     try {
 
