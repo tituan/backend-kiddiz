@@ -32,6 +32,7 @@ const userSchema = mongoose.Schema({
   followers: [{ type: Schema.Types.ObjectId, ref: "users" }],
   stripeCustomerId: { type: String },
   socketId: { type: String },
+  googleAuth: Boolean,
   terms: termsSchema, // Terms and conditions
   status: {
     type: String,

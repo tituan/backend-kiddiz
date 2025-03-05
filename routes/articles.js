@@ -36,10 +36,24 @@ router.post("/", async (req, res) => {
         } = req.body;
 
         // Price must be a positive number
-        if (price < 0) {
+        if (price < 0 || price > 999) {
             return res
                 .status(400)
                 .json({ result: false, error: "Invalid price value" });
+        }
+
+        // title must have maximum 30 characters
+        if (title.length > 30) {
+            return res
+                .status(400)
+                .json({ result: false, error: "Invalid title length" });
+        }
+
+        // description must have maximum 250 characters
+        if (productDescription.length > 250) {
+            return res
+                .status(400)
+                .json({ result: false, error: "Invalid description length" });
         }
 
         // An article can't be created without an userID
@@ -127,13 +141,19 @@ router.post("/", async (req, res) => {
     }
 });
 
-// Display all articles
+// Display all articles & Display articles by search
 router.get('/', async (req, res) => {
 
     try {
 
-        // display all the articles
-        const articles = await Article.find()
+        // Récupérer le terme de recherche depuis la requête s'il y en a un 
+        const searchTerm = req.query.search || '';
+
+        // Filtrer la recherche sur le titre de l'article
+        const filter = searchTerm ? { title: { $regex: searchTerm, $options: 'i' } } : {};
+
+        // Afficher tous les articles ou ceux qui correspondent au terme de recherche
+        const articles = await Article.find(filter)
             .populate('user', 'firstname note address.city -_id');
 
         // selection of the informations i want to share
@@ -204,7 +224,7 @@ router.get('/popular', async (req, res) => {
     }
 })
 
-// Display article by Seller
+// Display articles by Seller
 router.get('/:email', async (req, res) => {
 
     try {
