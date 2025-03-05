@@ -4,6 +4,7 @@ require("../models/connection");
 const User = require("../models/users.js");
 const { checkBody } = require("../modules/checkBody");
 // const jwt = require("jsonwebtoken");
+import { jwtDecode } from "jwt-decode";
 const moment = require("moment");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
@@ -173,32 +174,30 @@ router.post("/signup", async (req, res) => {
 
 
 
-router.post('/signupGoogle', async (req, res) => {
+router.post('/signpGoogle', async (req, res) => {
   const { token } = req.body;
 
   try {
-    const userData = await verifyGoogleToken(token);
-    const { email, name, googleId } = userData;
+    const userData = await  jwtDecode(token);
+    const { email, name } = userData;
 
     // check if the user exists
     let user = await User.findOne({ email });
-    if (user) {
-      return res.status(400).json({ message: "Utilisateur déjà existant, essayez de vous connecter." });
+    if (user && user.googleAuth) {
+      return res.status(4200).json({ result: true,  user });
     }
 
     // Create a new user
     user = new User({
       email,
       name,
-      googleId,
+      googleAuth: true,
+      token: uid2(32),
       // password not required
     });
     await user.save();
 
-    // Générer un token JWT ou une session pour l'utilisateur
-    const userToken = uid2(32); // Génère un token unique de 32 caractères
-    user.token = userToken;
-    res.json({ token: userToken, user });
+    res.json({ result: true,  user });
   } catch (error) {
     res.status(500).json({ message: "Erreur lors du Sign Up", error });
   }
@@ -207,6 +206,8 @@ router.post('/signupGoogle', async (req, res) => {
 
 router.post("/signin", async (req, res) => {
   try {
+
+    
     // Check if the body is correct
     if (!checkBody(req.body, ["email", "password"])) {
       res.json({ result: false, error: "Missing or empty fields" });
@@ -220,7 +221,12 @@ router.post("/signin", async (req, res) => {
     }
     // Find the user
     const userData = await User.findOne({ email: req.body.email });
-    
+
+    //check if user signup with google
+    if (userData.googleAuth) {
+      return res.status(400).json({ message: "Utilisateur déjà existant via une connexion Google, essayez de vous connecter." });
+    }
+
     // Check if the user exists and the password is correct
     if (userData && bcrypt.compareSync(req.body.password, userData.password)) {
       res.json({ result: true, userData });
