@@ -4,6 +4,7 @@ require("../models/connection");
 const User = require("../models/users.js");
 const { checkBody } = require("../modules/checkBody");
 // const jwt = require("jsonwebtoken");
+import { jwtDecode } from "jwt-decode";
 const moment = require("moment");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
@@ -177,7 +178,7 @@ router.post('/signupGoogle', async (req, res) => {
   const { token } = req.body;
 
   try {
-    const userData = await verifyGoogleToken(token);
+    const userData = await  jwtDecode(token);
     const { email, name, googleId } = userData;
 
     // check if the user exists
@@ -191,6 +192,7 @@ router.post('/signupGoogle', async (req, res) => {
       email,
       name,
       googleId,
+      token: uid2(32),
       // password not required
     });
     await user.save();
