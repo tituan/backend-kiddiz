@@ -313,7 +313,6 @@ router.get('/:id', async (req, res) => {
 
 
 //Display articles by item type
-
 router.get('/type/:itemType', async (req, res) => {
     
     try {
