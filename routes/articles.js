@@ -183,7 +183,7 @@ router.get('/', async (req, res) => {
 // Display articles by likes
 router.get('/popular', async (req, res) => {
 
-//     try {
+    try {
 
         const articles = await Article.find()
             .populate('user', 'firstname note address.city -_id')
@@ -310,5 +310,95 @@ router.get('/:id', async (req, res) => {
             });
     }
 })
+
+
+//Display articles by item type
+
+router.get('/type/:itemType', async (req, res) => {
+    
+    try {
+
+        const articles = await Article.find({itemType: req.params.itemType})
+
+        // Check if the id is exist in database
+        if (!articles) {
+            return res
+                .status(404)
+                .json({ result: false, error: "Article not found" });
+        }
+
+        // selection of the informations i want to share
+        const articlesResponse = articles.map((article) => ({
+            id: article.id,
+            title: article.title,
+            productDescription: article.productDescription,
+            category: article.category,
+            itemType: article.itemType,
+            condition: article.condition,
+            price: article.price,
+            pictures: article.pictures,
+            articleCreationDate: article.articleCreationDate,
+            user: article.user,
+        }));  
+
+        res.json({ result: true, article: articlesResponse });
+
+    } catch (error) {
+        res
+            .status(500)
+            .json({
+                result: false,
+                message: "An error has occurred.",
+                error: error.message,
+            });
+    };
+}
+);
+
+// Display articles by category
+router.get('/category/:category', async (req, res) => {
+
+    try {
+
+        const articles = await Article.find({category: req.params.category})
+            .populate('user', 'firstname note address.city -_id');
+
+
+        // Check if the id is exist in database
+        if (!articles) {
+            return res
+                .status(404)
+                .json({ result: false, error: "Article not found" });
+            }
+
+
+        // selection of the informations i want to share
+        const articleResponse = articles.map((article) => ({
+            id: article.id,
+            title: article.title,
+            productDescription: article.productDescription,
+            category: article.category,
+            itemType: article.itemType,
+            condition: article.condition,
+            price: article.price,
+            pictures: article.pictures,
+            articleCreationDate: article.articleCreationDate,
+            user: article.user,
+        }));
+
+        res.json({ result: true, article: articleResponse });
+
+    } catch (error) {
+        res
+            .status(500)
+            .json({
+                result: false,
+                message: "An error has occurred.",
+                error: error.message,
+            });
+    };
+}   
+);
+
 
 module.exports = router;
