@@ -297,10 +297,10 @@ router.get('/:category', async (req, res) => {
 
         const article = await Article.find(req.params.category)
             .populate('user', 'firstname note address.city -_id');
-            
+
 
         // Check if the id is exist in database
-        if (!article) {
+        if (!article)  {
             return res
                 .status(404)
                 .json({ result: false, error: "Article not found" });
