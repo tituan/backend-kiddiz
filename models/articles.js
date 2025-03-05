@@ -13,6 +13,7 @@ const articleSchema = mongoose.Schema({
     vat: { type: Number, default: 0 },
     currency: { type: String, default: "EUR" },
     pictures: [{ type: String }],
+    availableStock: {type: Number, default: 1},
     usersLikers: [{ type: mongoose.Schema.Types.ObjectId, ref: "users" }],
 });
 
