@@ -26,7 +26,7 @@ router.post("/", async (req, res) => {
         }
 
         const {
-            user,
+            token,
             title,
             productDescription,
             category,
@@ -34,6 +34,9 @@ router.post("/", async (req, res) => {
             condition,
             price,
         } = req.body;
+
+        // Check if user exist
+        const user = await User.findOne({ token: token });
 
         // Price must be a positive number
         if (price < 0 || price > 999) {
@@ -103,7 +106,7 @@ router.post("/", async (req, res) => {
 
         // create a new article
         const newArticle = new Article({
-            user,
+            user: user._id,
             title,
             productDescription,
             category,
@@ -310,7 +313,6 @@ router.get('/:id', async (req, res) => {
             });
     }
 })
-
 
 //Display articles by item type
 router.get('/type/:itemType', async (req, res) => {
