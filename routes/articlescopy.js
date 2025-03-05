@@ -3,7 +3,7 @@ var router = express.Router();
 const User = require("../models/users.js");
 const Article = require("../models/articles.js");
 const FavoriteArticle = require("../models/favoriteArticles.js");
-const { checkBody } = require("../modules/checkBody");
+const { checkBody } = require("../modules/checkBody.js");
 const mongoose = require("mongoose");
 const uniqid = require("uniqid");
 const cloudinary = require("cloudinary").v2;
@@ -247,22 +247,21 @@ router.get('/:id', async (req, res) => {
 
 //Display articles by item type
 
-router.get('/:itemType', async (req, res) => {
+router.get('/type/:itemType', async (req, res) => {
     
     try {
 
-        const article = await Article.find(req.params.itemType)
-            .populate('user', 'firstname note address.city -_id');  
+        const articles = await Article.find({itemType: req.params.itemType})
 
         // Check if the id is exist in database
-        if (!article) {
+        if (!articles) {
             return res
                 .status(404)
                 .json({ result: false, error: "Article not found" });
         }
 
         // selection of the informations i want to share
-        const articleResponse = {
+        const articlesResponse = articles.map((article) => ({
             id: article.id,
             title: article.title,
             productDescription: article.productDescription,
@@ -273,9 +272,9 @@ router.get('/:itemType', async (req, res) => {
             pictures: article.pictures,
             articleCreationDate: article.articleCreationDate,
             user: article.user,
-        };
+        }));  
 
-        res.json({ result: true, article: articleResponse });
+        res.json({ result: true, article: articlesResponse });
 
     } catch (error) {
         res
@@ -290,17 +289,16 @@ router.get('/:itemType', async (req, res) => {
 );
 
 // Display articles by category
-
-router.get('/:category', async (req, res) => {
+router.get('/category/:category', async (req, res) => {
 
     try {
 
-        const article = await Article.find(req.params.category)
+        const articles = await Article.find({category: req.params.category})
             .populate('user', 'firstname note address.city -_id');
 
 
         // Check if the id is exist in database
-        if (!article)  {
+        if (!articles) {
             return res
                 .status(404)
                 .json({ result: false, error: "Article not found" });
@@ -308,7 +306,7 @@ router.get('/:category', async (req, res) => {
 
 
         // selection of the informations i want to share
-        const articleResponse = {
+        const articleResponse = articles.map((article) => ({
             id: article.id,
             title: article.title,
             productDescription: article.productDescription,
@@ -319,7 +317,7 @@ router.get('/:category', async (req, res) => {
             pictures: article.pictures,
             articleCreationDate: article.articleCreationDate,
             user: article.user,
-        };
+        }));
 
         res.json({ result: true, article: articleResponse });
 
@@ -334,6 +332,7 @@ router.get('/:category', async (req, res) => {
     };
 }   
 );
+
 
 
 

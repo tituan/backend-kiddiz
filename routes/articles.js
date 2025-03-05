@@ -162,22 +162,107 @@ router.get('/', async (req, res) => {
 });
 
 // Display article by ID
-router.get('/:id', async (req, res) => {
+// router.get('/:id', async (req, res) => {
+
+//     try {
+
+//         const article = await Article.findById(req.params.id)
+//             .populate('user', 'firstname note address.city -_id');
+
+//         // Check if the id is exist in database
+//         if (!article) {
+//             return res
+//                 .status(404)
+//                 .json({ result: false, error: "Article not found" });
+//         }
+
+//         // selection of the informations i want to share
+//         const articleResponse = {
+//             id: article.id,
+//             title: article.title,
+//             productDescription: article.productDescription,
+//             category: article.category,
+//             itemType: article.itemType,
+//             condition: article.condition,
+//             price: article.price,
+//             pictures: article.pictures,
+//             articleCreationDate: article.articleCreationDate,
+//             user: article.user,
+//         };
+
+//         res.json({ result: true, article: articleResponse });
+
+//     } catch (error) {
+//         res
+//             .status(500)
+//             .json({
+//                 result: false,
+//                 message: "An error has occurred.",
+//                 error: error.message,
+//             });
+//     }
+// })
+
+// // Display articles by likes
+// router.get('/:id', async (req, res) => {
+
+//     try {
+
+//         const article = await Article.find(req.params.id)
+//             .populate('user', 'firstname note address.city -_id');
+
+//         // Check if the id is exist in database
+//         if (!article) {
+//             return res
+//                 .status(404)
+//                 .json({ result: false, error: "Article not found" });
+//         }
+
+//         // selection of the informations i want to share
+//         const articleResponse = {
+//             id: article.id,
+//             title: article.title,
+//             productDescription: article.productDescription,
+//             category: article.category,
+//             itemType: article.itemType,
+//             condition: article.condition,
+//             price: article.price,
+//             pictures: article.pictures,
+//             articleCreationDate: article.articleCreationDate,
+//             user: article.user,
+//         };
+
+//         res.json({ result: true, article: articleResponse });
+
+//     } catch (error) {
+//         res
+//             .status(500)
+//             .json({
+//                 result: false,
+//                 message: "An error has occurred.",
+//                 error: error.message,
+//             });
+//     }
+// })
+
+router.get('/category/:category', async (req, res) => {
 
     try {
 
-        const article = await Article.findById(req.params.id)
+        const articles = await Article.find({category: req.params.category})
             .populate('user', 'firstname note address.city -_id');
 
+
         // Check if the id is exist in database
-        if (!article) {
+        if (!articles) {
             return res
                 .status(404)
                 .json({ result: false, error: "Article not found" });
-        }
+            }
+
 
         // selection of the informations i want to share
-        const articleResponse = {
+        const articleResponse = articles.map((article) => ({
             id: article.id,
             title: article.title,
             productDescription: article.productDescription,
@@ -188,7 +273,7 @@ router.get('/:id', async (req, res) => {
             pictures: article.pictures,
             articleCreationDate: article.articleCreationDate,
             user: article.user,
-        };
+        }));
 
         res.json({ result: true, article: articleResponse });
 
@@ -200,49 +285,9 @@ router.get('/:id', async (req, res) => {
                 message: "An error has occurred.",
                 error: error.message,
             });
-    }
-})
+    };
+}   
+);
 
-// Display articles by likes
-router.get('/:id', async (req, res) => {
-
-    try {
-
-        const article = await Article.find(req.params.id)
-            .populate('user', 'firstname note address.city -_id');
-
-        // Check if the id is exist in database
-        if (!article) {
-            return res
-                .status(404)
-                .json({ result: false, error: "Article not found" });
-        }
-
-        // selection of the informations i want to share
-        const articleResponse = {
-            id: article.id,
-            title: article.title,
-            productDescription: article.productDescription,
-            category: article.category,
-            itemType: article.itemType,
-            condition: article.condition,
-            price: article.price,
-            pictures: article.pictures,
-            articleCreationDate: article.articleCreationDate,
-            user: article.user,
-        };
-
-        res.json({ result: true, article: articleResponse });
-
-    } catch (error) {
-        res
-            .status(500)
-            .json({
-                result: false,
-                message: "An error has occurred.",
-                error: error.message,
-            });
-    }
-})
 
 module.exports = router;
