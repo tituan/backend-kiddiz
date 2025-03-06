@@ -154,7 +154,7 @@ router.get('/', async (req, res) => {
         const searchTerm = req.query.search || '';
 
         // Filtrer la recherche sur le titre de l'article
-        const filter = searchTerm ? { title: { $regex: searchTerm, $options: 'i' } } : {};
+        const filter = searchTerm ? { title: { $regex: searchTerm, $options: 'i' }, availableStock: { $gt: 0 } } : { availableStock: { $gt: 0 } };
 
         // Afficher tous les articles ou ceux qui correspondent au terme de recherche
         const articles = await Article.find(filter)
@@ -171,6 +171,8 @@ router.get('/', async (req, res) => {
             price: article.price,
             pictures: article.pictures,
             articleCreationDate: article.articleCreationDate,
+            likesCount: article.usersLikers.length,
+            availableStock: article.availableStock,
             user: article.user,
         }));
 
@@ -202,7 +204,7 @@ router.get('/popular', async (req, res) => {
 
         // Mapper les articles pour ne renvoyer que les informations souhaitées
         const articlesResponse = articles.map(article => ({
-            id: article._id,
+            id: article.id,
             title: article.title,
             productDescription: article.productDescription,
             category: article.category,
@@ -212,6 +214,7 @@ router.get('/popular', async (req, res) => {
             pictures: article.pictures,
             articleCreationDate: article.articleCreationDate,
             likesCount: article.usersLikers.length, // Ajout du nombre de likes
+            availableStock: article.availableStock,
             user: article.user
         }));
 
@@ -229,13 +232,13 @@ router.get('/popular', async (req, res) => {
 })
 
 // Display articles by Seller
-router.get('/:email', async (req, res) => {
+router.get('/get-by/seller/:email', async (req, res) => {
 
     try {
 
-        const user = await User.findOne({ email: req.params.email })
+        const user = await User.findOne({ email: req.params.email})
 
-        const articles = await Article.find({user: user._id})
+        const articles = await Article.find({user: user._id, availableStock: { $gt: 0 } })
             .populate('user', 'firstname note address.city -_id')
     
         // Check if the id is exist in database
@@ -257,6 +260,7 @@ router.get('/:email', async (req, res) => {
             pictures: article.pictures,
             articleCreationDate: article.articleCreationDate,
             likesCount: article.usersLikers.length, // Ajout du nombre de likes
+            availableStock: article.availableStock,
             user: article.user
         }));
 
@@ -274,7 +278,7 @@ router.get('/:email', async (req, res) => {
 })
 
 // Display article by ID
-router.get('/:id', async (req, res) => {
+router.get('/get-by/id/:id', async (req, res) => {
 
     try {
 
@@ -299,6 +303,7 @@ router.get('/:id', async (req, res) => {
             price: article.price,
             pictures: article.pictures,
             articleCreationDate: article.articleCreationDate,
+            availableStock: article.availableStock,
             user: article.user,
         };
 
@@ -340,6 +345,8 @@ router.get('/type/:itemType', async (req, res) => {
             price: article.price,
             pictures: article.pictures,
             articleCreationDate: article.articleCreationDate,
+            likesCount: article.usersLikers.length,
+            availableStock: article.availableStock,
             user: article.user,
         }));  
 
@@ -385,6 +392,8 @@ router.get('/category/:category', async (req, res) => {
             price: article.price,
             pictures: article.pictures,
             articleCreationDate: article.articleCreationDate,
+            likesCount: article.usersLikers.length,
+            availableStock: article.availableStock,
             user: article.user,
         }));
 
@@ -402,7 +411,7 @@ router.get('/category/:category', async (req, res) => {
 }   
 );
 
-// Modify Article for Seller
+// Modify Article for Seller EN COURS
 router.put("/:articleId", async (req, res) => {
     try {
         const { articleId } = req.params;
