@@ -189,7 +189,7 @@ router.get('/popular', async (req, res) => {
 
     try {
 
-        const articles = await Article.find()
+        const articles = await Article.find({ availableStock: { $gt: 0 } })
             .populate('user', 'firstname note address.city -_id')
             .sort({ 'usersLikers': -1 }); // Trier par nombre de likes
 
@@ -402,5 +402,90 @@ router.get('/category/:category', async (req, res) => {
 }   
 );
 
+// Modify Article for Seller
+router.put("/:articleId", async (req, res) => {
+    try {
+        const { articleId } = req.params;
+        const {
+            token,
+            title,
+            productDescription,
+            category,
+            itemType,
+            condition,
+            price,
+        } = req.body;
+
+        // Check if user exist
+        const user = await User.findOne({ token: token });
+
+        // Check if the article exists and belongs to the user
+        const article = await Article.findOne({ _id: articleId, user: user._id });
+
+        if (!article) {
+            return res.status(404).json({ result: false, error: "Article not found or unauthorized" });
+        }
+
+        // Validate the fields if they are provided
+        if (price < 0 || price > 999) {
+            return res.status(400).json({ result: false, error: "Invalid price value" });
+        }
+
+        if (title && title.length > 30) {
+            return res.status(400).json({ result: false, error: "Invalid title length" });
+        }
+
+        if (productDescription && productDescription.length > 250) {
+            return res.status(400).json({ result: false, error: "Invalid description length" });
+        }
+
+        // Update the article fields if they are provided
+        if (title) article.title = title;
+        if (productDescription) article.productDescription = productDescription;
+        if (category) article.category = category;
+        if (itemType) article.itemType = itemType;
+        if (condition) article.condition = condition;
+        if (price !== undefined) article.price = price;
+
+        // Handle picture update if a new picture is provided
+        if (req.files && req.files.pictures) {
+            const photoPath = `./tmp/${uniqid()}.jpg`;
+            const resultMove = await req.files.pictures.mv(photoPath);
+
+            if (!resultMove) {
+                const resultCloudinary = await cloudinary.uploader.upload(photoPath);
+                fs.unlinkSync(photoPath);
+                article.pictures = resultCloudinary.secure_url;
+            } else {
+                return res.json({ result: false, error: resultMove.message || resultMove });
+            }
+        }
+
+        // Save the updated article
+        const updatedArticle = await article.save();
+
+        // Select the information to share
+        const articleResponse = {
+            title: updatedArticle.title,
+            productDescription: updatedArticle.productDescription,
+            category: updatedArticle.category,
+            itemType: updatedArticle.itemType,
+            condition: updatedArticle.condition,
+            price: updatedArticle.price,
+            pictures: updatedArticle.pictures,
+            articleCreationDate: updatedArticle.articleCreationDate,
+        };
+
+        // Response with the result
+        res.json({ result: true, article: articleResponse });
+    } catch (error) {
+        // Handle potential errors
+        res.status(500).json({
+            result: false,
+            message: "An error has occurred.",
+            error: error.message,
+        });
+    }
+});
 
 module.exports = router;
