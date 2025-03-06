@@ -232,14 +232,14 @@ router.get('/popular', async (req, res) => {
 })
 
 // Display articles by Seller
-router.get('/get-by/seller/:email', async (req, res) => {
+router.get('/get-by/seller/:token', async (req, res) => {
 
     try {
 
-        const user = await User.findOne({ email: req.params.email})
+        const user = await User.findOne({ token: req.params.token })
 
-        const articles = await Article.find({user: user._id, availableStock: { $gt: 0 } })
-            .populate('user', 'firstname note address.city -_id')
+        const articles = await Article.find({ user: user._id, availableStock: { $gt: 0 } })
+            .populate('user', 'firstname note address.city token -_id')
     
         // Check if the id is exist in database
         if (!articles || articles.length === 0) {
@@ -282,8 +282,8 @@ router.get('/get-by/id/:id', async (req, res) => {
 
     try {
 
-        const article = await Article.findById(req.params.id)
-            .populate('user', 'firstname note address.city -_id');
+        const article = await Article.findOne({_id: req.params.id, availableStock: { $gt: 0 }})
+            .populate('user', 'firstname note address.city token -_id');
 
         // Check if the id exist in database
         if (!article) {
@@ -321,11 +321,12 @@ router.get('/get-by/id/:id', async (req, res) => {
 })
 
 //Display articles by item type
-router.get('/type/:itemType', async (req, res) => {
+router.get('/get-by/type/:itemType', async (req, res) => {
     
     try {
 
-        const articles = await Article.find({itemType: req.params.itemType})
+        const articles = await Article.find({ itemType: req.params.itemType, availableStock: { $gt: 0 } })
+            .populate('user', 'firstname note address.city token -_id');
 
         // Check if the id is exist in database
         if (!articles) {
@@ -369,8 +370,8 @@ router.get('/category/:category', async (req, res) => {
 
     try {
 
-        const articles = await Article.find({category: req.params.category})
-            .populate('user', 'firstname note address.city -_id');
+        const articles = await Article.find({category: req.params.category, availableStock: { $gt: 0 } })
+            .populate('user', 'firstname note address.city token -_id');
 
 
         // Check if the id is exist in database
