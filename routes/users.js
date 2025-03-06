@@ -1,15 +1,30 @@
-var express = require("express");
-var router = express.Router();
+
+// import express from "express";
+// import jwtDecode from "jwt-decode";
+// var express = require("express");
+// var router = express.Router();
+// require("../models/connection");
+// const User = require("../models/users.js");
+// const { checkBody } = require("../modules/checkBody");
+// const jwt = require("jsonwebtoken");
+// // import { jwtDecode } from "jwt-decode";
+// const moment = require("moment");
+// const bcrypt = require("bcrypt");
+// const nodemailer = require("nodemailer");
+// const uid2 = require('uid2');
+// const { OAuth2Client } = require('google-auth-library');
+
+const express = require("express");
+const router = express.Router();
 require("../models/connection");
 const User = require("../models/users.js");
 const { checkBody } = require("../modules/checkBody");
-// const jwt = require("jsonwebtoken");
-import { jwtDecode } from "jwt-decode";
+const jwtDecode = require("jwt-decode");
 const moment = require("moment");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
-const uid2 = require('uid2');
-const { OAuth2Client } = require('google-auth-library');
+const uid2 = require("uid2");
+const { OAuth2Client } = require("google-auth-library");
 
 // Regex to validate email
 const emailRegex =
