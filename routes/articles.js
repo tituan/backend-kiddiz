@@ -174,6 +174,7 @@ router.get('/', async (req, res) => {
             likesCount: article.usersLikers.length,
             availableStock: article.availableStock,
             user: article.user,
+            usersLikers: article.usersLikers.token,
         }));
 
         res.json({ result: true, articles: articlesResponse });
