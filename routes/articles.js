@@ -174,6 +174,7 @@ router.get('/', async (req, res) => {
             likesCount: article.usersLikers.length,
             availableStock: article.availableStock,
             user: article.user,
+            usersLikers: article.usersLikers.token,
         }));
 
         res.json({ result: true, articles: articlesResponse });
@@ -215,7 +216,8 @@ router.get('/popular', async (req, res) => {
             articleCreationDate: article.articleCreationDate,
             likesCount: article.usersLikers.length, // Ajout du nombre de likes
             availableStock: article.availableStock,
-            user: article.user
+            user: article.user,
+            usersLikers: article.usersLikers.token,
         }));
 
         res.json({ result: true, article: articlesResponse });
@@ -488,6 +490,45 @@ router.put("/:articleId", async (req, res) => {
 
         // Response with the result
         res.json({ result: true, article: articleResponse });
+    } catch (error) {
+        // Handle potential errors
+        res.status(500).json({
+            result: false,
+            message: "An error has occurred.",
+            error: error.message,
+        });
+    }
+});
+
+// Delete an article
+router.put("/stock/:articleId", async (req, res) => {
+    try {
+        const { articleId } = req.params;
+        const {
+            token,
+        } = req.body;
+
+        console.log("Article ID:", articleId); // Log pour vérifier l'ID
+        console.log("Token:", token);
+
+        // Check if user exist
+        const user = await User.findOne({ token: token });
+
+        // Check if the article exists and belongs to the user
+        const article = await Article.findOne({ _id: articleId, user: user._id });
+
+        if (!article) {
+            return res.status(404).json({ result: false, error: "Article not found or unauthorized" });
+        }
+
+        // Update the availableStock to 0
+        article.availableStock = 0;
+       
+        // Save the updated article
+        await article.save();
+
+        // Response with the result
+        res.json({ result: true, message: "article deleted" });
     } catch (error) {
         // Handle potential errors
         res.status(500).json({
