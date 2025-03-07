@@ -267,7 +267,7 @@ router.get('/get-by/seller/:token', async (req, res) => {
             user: article.user
         }));
 
-        res.json({ result: true, article: articlesResponse });
+        res.json({ result: true, articles: articlesResponse });
 
     } catch (error) {
         res
