@@ -194,6 +194,7 @@ router.get('/popular', async (req, res) => {
 
         const articles = await Article.find({ availableStock: { $gt: 0 } })
             .populate('user', 'firstname note token address.city -_id')
+            .populate('usersLikers', 'token -_id')
             .sort({ 'usersLikers': -1 }); // Trier par nombre de likes
 
         // Check if the id is exist in database
@@ -217,7 +218,7 @@ router.get('/popular', async (req, res) => {
             likesCount: article.usersLikers.length, // Ajout du nombre de likes
             availableStock: article.availableStock,
             user: article.user,
-            usersLikers: article.usersLikers.token,
+            usersLikers: article.usersLikers,
         }));
 
         res.json({ result: true, article: articlesResponse });
