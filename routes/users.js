@@ -1,19 +1,4 @@
 
-// import express from "express";
-// import jwtDecode from "jwt-decode";
-// var express = require("express");
-// var router = express.Router();
-// require("../models/connection");
-// const User = require("../models/users.js");
-// const { checkBody } = require("../modules/checkBody");
-// const jwt = require("jsonwebtoken");
-// // import { jwtDecode } from "jwt-decode";
-// const moment = require("moment");
-// const bcrypt = require("bcrypt");
-// const nodemailer = require("nodemailer");
-// const uid2 = require('uid2');
-// const { OAuth2Client } = require('google-auth-library');
-
 const express = require("express");
 const router = express.Router();
 require("../models/connection");
@@ -39,7 +24,7 @@ router.post("/signup", async (req, res) => {
       email: req.body.email?.trim() || "",
       password: req.body.password,
       confirmPassword: req.body.confirmPassword,
-      dateOfBirth: req.body.dateOfBirth,
+      // dateOfBirth: req.body.dateOfBirth,
       conditionUtilisation: req.body.conditionUtilisation,
       publicy: req.body.publicy,
     };
@@ -52,7 +37,7 @@ router.post("/signup", async (req, res) => {
         "confirmPassword",
         "email",
         "lastname",
-        "dateOfBirth",
+        // "dateOfBirth",
       ])
     ) {
       return res.json({ result: false, error: "Missing or empty fields" });
@@ -93,15 +78,6 @@ router.post("/signup", async (req, res) => {
 
     // hash the password
     const hash = bcrypt.hashSync(cleanedBody.password, 10);
-
-    // Ggenerate a token NOT USED FOR V1
-    // const token = jwt.sign(
-    //   { email: cleanedBody.email },
-    //   process.env.JWT_SECRET,
-    //   {
-    //     expiresIn: "1y",
-    //   }
-    // );
 
     // format the date of birth
     const dateOfBirth = moment(
