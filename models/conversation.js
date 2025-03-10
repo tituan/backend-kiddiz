@@ -6,4 +6,4 @@ const conversationSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }, // creation date
 });
 
-module.exports = mongoose.model('Conversation', conversationSchema);
+module.exports = mongoose.model('Conversations', conversationSchema);
