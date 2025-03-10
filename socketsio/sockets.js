@@ -2,6 +2,8 @@ const Conversation = require('../models/connection'); // Importer le modèle Con
 const Message = require('../models/message'); // Importer le modèle Message
 
 const sockets = async (io, socket) => {
+
+
   // listen for new connections
   socket.on('start_conversation', async (data) => {
     const { articleId, sellerId, buyerId } = data;
@@ -37,7 +39,8 @@ const sockets = async (io, socket) => {
   // listen for new messages
   socket.on('send_message', async (data) => {
     const { conversationId, sender, receiver, content } = data;
-
+    console.log('Émission du message:', newMessage);
+    io.emit('receive_message', newMessage);
     try {
       // save the message in MongoDB
       const newMessage = new Message({
