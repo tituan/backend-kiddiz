@@ -1,63 +1,55 @@
-
-
 const { Server } = require("socket.io");
-const Message = require("../models/message");
 const Conversation = require("../models/conversation");
+const Message = require("../models/message");
 
-module.exports = (server) => {
-  const io = new Server(server, {
-    cors: {
-      origin: "*", // À adapter en prod
-      methods: ["GET", "POST"],
-    },
-  });
-
+module.exports = (io) => {
   io.on("connection", (socket) => {
-    console.log(`🟢 Nouvel utilisateur connecté : ${socket.id}`);
+    console.log(`🟢 Un utilisateur connecté : ${socket.id}`);
 
-    /**
-     * 🔹 Rejoindre une conversation
-     */
-    socket.on("join_conversation", (conversationId) => {
-      if (!conversationId) return;
+    socket.on("start_conversation", async (data) => {
+      const { articleId, sellerId, buyerId } = data;
 
-      socket.join(conversationId);
-      console.log(`✅ Utilisateur ${socket.id} a rejoint la conversation ${conversationId}`);
-    });
-
-    /**
-     * 📩 Envoi d'un message
-     */
-    socket.on("send_message", async (data) => {
       try {
-        const { conversationId, sender, receiver, content } = data;
+        const existingConversation = await Conversation.findOne({
+          participants: { $all: [sellerId, buyerId] },
+          articleId,
+        });
 
-        // Vérification des données
-        if (!conversationId || !sender || !receiver || !content) {
-          return socket.emit("error", { message: "Données manquantes pour envoyer le message" });
+        let conversation;
+        if (!existingConversation) {
+          conversation = new Conversation({
+            participants: [sellerId, buyerId],
+            articleId,
+          });
+          await conversation.save();
+          console.log("Nouvelle conversation créée:", conversation);
+        } else {
+          conversation = existingConversation;
+          console.log("Conversation existante récupérée:", conversation);
         }
 
-        // Création et sauvegarde du message
-        const newMessage = new Message({ conversationId, sender, receiver, content });
-        await newMessage.save();
-
-        // Envoyer uniquement aux utilisateurs de la conversation
-        socket.to(conversationId).emit("receive_message", newMessage);
-
-        console.log(`📨 Message envoyé dans conversation ${conversationId} par ${sender}`);
+        socket.emit("conversation_started", { conversationId: conversation._id });
       } catch (error) {
-        console.error("❌ Erreur lors de l’envoi du message:", error);
-        socket.emit("error", { message: "Erreur serveur lors de l'envoi du message" });
+        console.error("Erreur lors de la création de la conversation:", error);
       }
     });
 
-    /**
-     * 🔴 Déconnexion d'un utilisateur
-     */
+    socket.on("send_message", async (data) => {
+      const { conversationId, sender, receiver, content } = data;
+
+      try {
+        const newMessage = new Message({ conversationId, sender, receiver, content });
+        await newMessage.save();
+        console.log("Message sauvegardé dans MongoDB:", newMessage);
+
+        io.to(conversationId).emit("receive_message", newMessage);
+      } catch (error) {
+        console.error("Erreur lors de l'envoi du message:", error);
+      }
+    } );
+
     socket.on("disconnect", () => {
       console.log(`🔴 Utilisateur déconnecté : ${socket.id}`);
     });
   });
-
-  return io;
 };

@@ -7,6 +7,7 @@ const { ObjectId } = require("mongodb");
 const Article = require("../models/articles.js");
 
 
+
 // Create a new message
 router.post("/new", async (req, res) => {
     try {
@@ -24,6 +25,24 @@ router.post("/new", async (req, res) => {
         res.status(500).json({ message: "Internal Server Error" });
     }
     });
+
+    //New conversation
+router.post("/new/conversation", async (req, res) => {
+    try {
+        const { participants, articleId } = req.body;
+        const newConversation = new Conversation({
+        participants,
+        articleId,
+        createdAt: new Date(),
+        });
+        const conversation = await newConversation.save();
+        res.status(200).json(conversation);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+    }
+    );  
 
     // Get all messages for a conversation ID
     router.get("/get/:id", async (req, res) => {
@@ -71,5 +90,32 @@ router.post("/new", async (req, res) => {
             res.status(500).json({ message: "Internal Server Error" });
         }
     });
+
+    // Route pour envoyer un message Socket io
+router.post("/", async (req, res) => {
+    try {
+      const { conversationId, sender, receiver, content } = req.body;
+  
+      if (!conversationId || !sender || !receiver || !content) {
+        return res.status(400).json({ error: "Tous les champs sont requis." });
+      }
+  
+      const newMessage = new Message({
+        conversationId,
+        sender,
+        receiver,
+        content,
+      });
+  
+      await newMessage.save();
+  
+      console.log("📩 Message envoyé :", newMessage);
+  
+      res.status(201).json(newMessage);
+    } catch (error) {
+      console.error("❌ Erreur lors de l'envoi du message :", error);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  });
 
     module.exports = router;

@@ -1,5 +1,6 @@
 const socketIo = require("socket.io");
-const sockets = require("./sockets");
+const configureSockets = require("./sockets"); // Import correct
+
 
 module.exports = (server) => {
 const io = socketIo(server, {
@@ -22,7 +23,7 @@ console.log("Client connected", socket.id);
 socket.on("disconnect", () => {
 console.log("Client disconnected", socket.id);
 });
-sockets(io, socket);
+configureSockets(io); 
 });
 return io;
 };
