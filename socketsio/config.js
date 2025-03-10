@@ -1,5 +1,6 @@
 const socketIo = require("socket.io");
 const sockets = require("./sockets");
+
 module.exports = (server) => {
 const io = socketIo(server, {
 cors: {
@@ -11,6 +12,7 @@ callback(null, true);
 callback(new Error("Not allowed by CORS"));
 }
 },
+
 allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept"],
 methods: ["GET", "POST", "PUT", "DELETE"],
 },

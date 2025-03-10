@@ -37,7 +37,7 @@ router.post("/signup", async (req, res) => {
         "confirmPassword",
         "email",
         "lastname",
-        "dateOfBirth",
+        // "dateOfBirth",
       ])
     ) {
       return res.json({ result: false, error: "Missing or empty fields" });
@@ -124,7 +124,7 @@ router.post("/signup", async (req, res) => {
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT),
-      secure: true,
+      secure: false,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
