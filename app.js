@@ -12,6 +12,7 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var articlesRouter = require('./routes/articles');
 var favoritesRouter = require('./routes/favorites');
+var chatRoomRouter = require('./routes/chatroom');
 
 var app = express();
 
@@ -30,5 +31,6 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/articles', articlesRouter);
 app.use('/favorites', favoritesRouter);
+app.use('/chatroom', chatRoomRouter);
 
 module.exports = app;
