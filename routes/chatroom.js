@@ -66,6 +66,18 @@ router.post("/new/conversation", async (req, res) => {
         }
     });
 
+    //get a conversation by participants
+    router.get("/get/conversation/:sellerId/:buyerId", async (req, res) => {
+        try {
+            const { sellerId, buyerId } = req.params;
+            const conversation = await Conversation.findOne({
+            participants: { $all: [sellerId, buyerId] },
+            });
+            res.status(200).json(conversation);
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: "Internal Server Error" });
+
     // Start a new conversation between two users
     router.post("/start", async (req, res) => {
         try {
