@@ -108,7 +108,7 @@ router.post("/signup", async (req, res) => {
       token: savedUser.token,
     };
 
-   
+  
     // Send an email configuration to the user
     /**
      * Creates a Nodemailer transporter object using SMTP configuration from environment variables.
@@ -283,6 +283,35 @@ router.put("/update/:token", async (req, res) => {
   }
 });
 
+router.get("/get-by-token/:token", async (req, res) => {
+  try {
+      const { token } = req.params;
+
+      // 🔹 Vérifier que le token est bien fourni
+      if (!token) {
+          return res.status(400).json({ message: "Token requis." });
+      }
+
+      // 🔹 Chercher l'utilisateur correspondant au token
+      const user = await User.findOne({ token }).select("firstname lastname token");
+
+      // 🔹 Vérifier si l'utilisateur existe
+      if (!user) {
+          return res.status(404).json({ message: "Utilisateur non trouvé." });
+      }
+
+      // 🔹 Retourner les informations de l'utilisateur
+      res.status(200).json(user);
+  } catch (error) {
+      console.error("❌ Erreur lors de la récupération de l'utilisateur :", error);
+      res.status(500).json({ message: "Internal Server Error" });
+  }
+});
 
 
 module.exports = router;
+
+
+
+
+
