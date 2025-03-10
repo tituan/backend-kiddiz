@@ -2,7 +2,7 @@ var express = require("express");
 var router = express.Router();
 const User = require("../models/users.js");
 const Messages = require("../models/messages.js");
-const Conversation = require("../models/conversations.js");
+const Conversation = require("../models/conversation.js");
 const { ObjectId } = require("mongodb");
 const Article = require("../models/articles.js");
 
@@ -71,3 +71,5 @@ router.post("/new", async (req, res) => {
             res.status(500).json({ message: "Internal Server Error" });
         }
     });
+
+    module.exports = router;

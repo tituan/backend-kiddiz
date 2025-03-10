@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const messagesSchema = mongoose.Schema({
+const mesagesSchema = mongoose.Schema({
     buyer: { type: mongoose.Schema.Types.ObjectId, ref: "users" },
     seller: { type: mongoose.Schema.Types.ObjectId, ref: "users" },
     content: { type: String },
@@ -8,6 +8,6 @@ const messagesSchema = mongoose.Schema({
     read: { type: Boolean, default: false },
   });
 
-const Messages = mongoose.model('messagess', messagesSchema);
+const Mesages = mongoose.model('mesages', mesagesSchema);
 
-module.exports = Messages;
+module.exports = Mesages;
