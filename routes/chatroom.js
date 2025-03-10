@@ -1,7 +1,7 @@
 var express = require("express");
 var router = express.Router();
 const User = require("../models/users.js");
-const Messages = require("../models/messages.js");
+const Message = require("../models/message.js");
 const Conversation = require("../models/conversation.js");
 const { ObjectId } = require("mongodb");
 const Article = require("../models/articles.js");
