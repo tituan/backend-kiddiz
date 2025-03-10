@@ -1,7 +1,7 @@
 var express = require("express");
 var router = express.Router();
 const User = require("../models/users.js");
-const Message = require("../models/messages.js");
+const Messages = require("../models/messages.js");
 const Conversation = require("../models/conversations.js");
 const { ObjectId } = require("mongodb");
 const Article = require("../models/articles.js");
@@ -11,24 +11,24 @@ const Article = require("../models/articles.js");
 router.post("/new", async (req, res) => {
     try {
         const { sender, receiver, content } = req.body;
-        const newMessage = new Message({
+        const newMessages = new Message({
         sender,
         receiver,
         content,
         date: new Date(),
         });
-        const message = await newMessage.save();
+        const message = await newMessages.save();
         res.status(200).json(message);
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: "Internal Server Error" });
     }
     });
-    
+
     // Get all messages for a conversation ID
     router.get("/get/:id", async (req, res) => {
         try {
-            const messages = await Message.find({ conversationId: req.params.id });
+            const messages = await Messages.find({ conversationId: req.params.id });
             res.status(200).json(messages);
         } catch (error) {
             console.log(error);
