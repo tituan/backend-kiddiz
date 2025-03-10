@@ -14,7 +14,7 @@
 const mongoose = require('mongoose');
 
 const messageSchema = new mongoose.Schema({
-  conversationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Conversation', required: true },
+  conversationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Conversation' },
   sender: { type: String, required: true }, // ID du sender
   receiver: { type: String, required: true }, // ID du receiver
   content: { type: String, required: true }, // Contenu du message
