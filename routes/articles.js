@@ -265,7 +265,8 @@ router.get('/get-by/seller/:token', async (req, res) => {
             articleCreationDate: article.articleCreationDate,
             likesCount: article.usersLikers.length, // Ajout du nombre de likes
             availableStock: article.availableStock,
-            user: article.user
+            user: article.user,
+            usersLikers: article.usersLikers,
         }));
 
         res.json({ result: true, articles: articlesResponse });
