@@ -27,11 +27,17 @@ router.post("/new", async (req, res) => {
             receiver: receiver,
             content,
             conversationId,
-            date: new Date(),
+            // date: new Date(),
         });
 
+        //const message = await newMessage.save();
+        //res.status(201).json(message);
         const message = await newMessage.save();
-        res.status(201).json(message);
+res.status(201).json({
+  ...message._doc,
+  date: message.timestamp, // ✅ Ajouter ceci
+  isOwnMessage: true // Facultatif selon ta logique
+});
     } catch (error) {
         console.error("Erreur lors de l'envoi du message :", error);
         res.status(500).json({ message: "Internal Server Error" });
@@ -209,7 +215,7 @@ router.get("/list/:token", async(req, res) => {
 router.get("/messages/:token/:conversationId", async (req, res) => {
     try {
         const { token, conversationId } = req.params;
-        const messages = await Message.find({ conversationId }).sort({ date: 1 }).populate("sender")
+        const messages = await Message.find({ conversationId }).sort({ timestamp: -1 }).populate("sender")
         const formattedMessages = messages.map((m) => {
             const {content, timestamp, sender} = m;
             return {
