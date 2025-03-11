@@ -15,6 +15,7 @@ const articleSchema = mongoose.Schema({
     pictures: [{ type: String }],
     availableStock: {type: Number, default: 1},
     usersLikers: [{ type: mongoose.Schema.Types.ObjectId, ref: "users" }],
+    boughtBy: { type: mongoose.Schema.Types.ObjectId, ref: "users" },
 });
 
 const Article = mongoose.model('articles', articleSchema);

@@ -236,45 +236,57 @@ router.post("/signin", async (req, res) => {
 
 router.put("/update/:token", async (req, res) => {
   try {
-    
-    // Clean all the fields
+    // Check if the token is provided
+    const userToken = req.params.token;
+    if (!userToken) {
+      return res.status(400).json({ result: false, error: "Token is missing" });
+    }
+
+    // Find the user based on the token
+    const user = await User.findOne({ token: userToken });
+    if (!user) {
+      return res.status(404).json({ result: false, error: "User not found" });
+    }
+
+    // Clean and retrieve address fields
     const cleanedAddress = {
-      number: req.body.number?.trim() || '',
-      line1: req.body.line1?.trim() || '',
-      line2: req.body.line2?.trim() || '',
-      zipCode: req.body.zipCode?.trim() || '',
-      city: req.body.city?.trim() || '',
-      state: req.body.state?.trim() || '',
-      country: req.body.country?.trim() || '',
+      number: req.body.number ? Number(req.body.number) : undefined,
+      line1: req.body.line1?.trim() || undefined,
+      line2: req.body.line2?.trim() || undefined,
+      zipCode: req.body.zipCode ? Number(req.body.zipCode) : undefined,
+      city: req.body.city?.trim() || undefined,
+      state: req.body.state?.trim() || undefined,
+      country: req.body.country?.trim() || undefined,
     };
 
-    // Check if the body is correct
-    if (!checkBody(cleanedAddress, ['number', 'line1', 'zipCode', 'city'])) {
-      return res.json({ result: false, error: 'Missing or empty address fields' });
+    // Check if the required fields are provided
+    if (!cleanedAddress.number || !cleanedAddress.line1 || !cleanedAddress.zipCode || !cleanedAddress.city) {
+      return res.status(400).json({ result: false, error: "Missing or empty address fields" });
     }
 
-    // Find the user
-    const userId = req.params.token;
-    const user = await User.findById(userId);
+    // Update only the provided fields to avoid overwriting existing data
+    Object.keys(cleanedAddress).forEach(key => {
+      if (cleanedAddress[key] !== undefined) {
+        user.address[key] = cleanedAddress[key];
+      }
+    });
 
-    if (!user) {
-      return res.status(404).json({ result: false, error: 'User not found' });
-    }
-
-    user.address = cleanedAddress;
+    // Save the updated user
     const updatedUser = await user.save();
 
-    const userResponse = {
-      firstname: updatedUser.firstname,
-      lastname: updatedUser.lastname,
-      email: updatedUser.email,
-      address: updatedUser.address, 
-    };
-
-    res.json({ result: true, userResponse });
+    // Send back the updated user information
+    res.json({
+      result: true,
+      user: {
+        firstname: updatedUser.firstname,
+        lastname: updatedUser.lastname,
+        email: updatedUser.email,
+        address: updatedUser.address,
+      },
+    });
 
   } catch (error) {
-    // Handle any errors
+    // Handle any unexpected errors
     res.status(500).json({
       result: false,
       message: "An error has occurred.",
@@ -282,6 +294,47 @@ router.put("/update/:token", async (req, res) => {
     });
   }
 });
+
+
+router.put("/iban/:token", async (req, res) => {
+  try {
+    // Récupérer et nettoyer l'IBAN
+    const iban = req.body.iban?.trim() || '';
+
+    // Vérifier si l'IBAN est fourni
+    if (!iban) {
+      return res.json({ result: false, error: "Missing or empty IBAN field" });
+    }
+
+    // Vérifier si le token est fourni
+    const userToken = req.params.token;
+    if (!userToken) {
+      return res.status(400).json({ result: false, error: "Token is missing" });
+    }
+
+    // Trouver et mettre à jour l'utilisateur
+    const updatedUser = await User.findOneAndUpdate(
+      { token: userToken },
+      { $set: { iban } },
+      { new: true } // Renvoie l'utilisateur mis à jour
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ result: false, error: "User not found" });
+    }
+
+    // Répondre avec l'IBAN mis à jour
+    res.json({ result: true, iban: updatedUser.iban });
+
+  } catch (error) {
+    res.status(500).json({
+      result: false,
+      message: "An error has occurred.",
+      error: error.message,
+    });
+  }
+});
+
 
 router.get("/get-by-token/:token", async (req, res) => {
   try {
