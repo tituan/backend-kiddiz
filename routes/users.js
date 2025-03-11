@@ -1,19 +1,4 @@
 
-// import express from "express";
-// import jwtDecode from "jwt-decode";
-// var express = require("express");
-// var router = express.Router();
-// require("../models/connection");
-// const User = require("../models/users.js");
-// const { checkBody } = require("../modules/checkBody");
-// const jwt = require("jsonwebtoken");
-// // import { jwtDecode } from "jwt-decode";
-// const moment = require("moment");
-// const bcrypt = require("bcrypt");
-// const nodemailer = require("nodemailer");
-// const uid2 = require('uid2');
-// const { OAuth2Client } = require('google-auth-library');
-
 const express = require("express");
 const router = express.Router();
 require("../models/connection");
@@ -39,7 +24,7 @@ router.post("/signup", async (req, res) => {
       email: req.body.email?.trim() || "",
       password: req.body.password,
       confirmPassword: req.body.confirmPassword,
-      dateOfBirth: req.body.dateOfBirth,
+      // dateOfBirth: req.body.dateOfBirth,
       conditionUtilisation: req.body.conditionUtilisation,
       publicy: req.body.publicy,
     };
@@ -52,7 +37,7 @@ router.post("/signup", async (req, res) => {
         "confirmPassword",
         "email",
         "lastname",
-        "dateOfBirth",
+        // "dateOfBirth",
       ])
     ) {
       return res.json({ result: false, error: "Missing or empty fields" });
@@ -94,15 +79,6 @@ router.post("/signup", async (req, res) => {
     // hash the password
     const hash = bcrypt.hashSync(cleanedBody.password, 10);
 
-    // Ggenerate a token NOT USED FOR V1
-    // const token = jwt.sign(
-    //   { email: cleanedBody.email },
-    //   process.env.JWT_SECRET,
-    //   {
-    //     expiresIn: "1y",
-    //   }
-    // );
-
     // format the date of birth
     const dateOfBirth = moment(
       req.body.dateOfBirth,
@@ -132,7 +108,7 @@ router.post("/signup", async (req, res) => {
       token: savedUser.token,
     };
 
-   
+  
     // Send an email configuration to the user
     /**
      * Creates a Nodemailer transporter object using SMTP configuration from environment variables.
@@ -148,7 +124,7 @@ router.post("/signup", async (req, res) => {
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT),
-      secure: true,
+      secure: false,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
@@ -307,6 +283,35 @@ router.put("/update/:token", async (req, res) => {
   }
 });
 
+router.get("/get-by-token/:token", async (req, res) => {
+  try {
+      const { token } = req.params;
+
+      // 🔹 Vérifier que le token est bien fourni
+      if (!token) {
+          return res.status(400).json({ message: "Token requis." });
+      }
+
+      // 🔹 Chercher l'utilisateur correspondant au token
+      const user = await User.findOne({ token }).select("firstname lastname token");
+
+      // 🔹 Vérifier si l'utilisateur existe
+      if (!user) {
+          return res.status(404).json({ message: "Utilisateur non trouvé." });
+      }
+
+      // 🔹 Retourner les informations de l'utilisateur
+      res.status(200).json(user);
+  } catch (error) {
+      console.error("❌ Erreur lors de la récupération de l'utilisateur :", error);
+      res.status(500).json({ message: "Internal Server Error" });
+  }
+});
 
 
 module.exports = router;
+
+
+
+
+

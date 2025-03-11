@@ -158,7 +158,7 @@ router.get('/', async (req, res) => {
 
         // Afficher tous les articles ou ceux qui correspondent au terme de recherche
         const articles = await Article.find(filter)
-            .populate('user', 'firstname note address.city -_id');
+            .populate('user', 'firstname note token address.city -_id');
 
         // selection of the informations i want to share
         const articlesResponse = articles.map((article) => ({
@@ -174,6 +174,7 @@ router.get('/', async (req, res) => {
             likesCount: article.usersLikers.length,
             availableStock: article.availableStock,
             user: article.user,
+            userToken: article.user.token,
             usersLikers: article.usersLikers.token,
         }));
 

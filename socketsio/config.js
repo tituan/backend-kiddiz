@@ -1,5 +1,7 @@
 const socketIo = require("socket.io");
-const sockets = require("./sockets");
+const configureSockets = require("./sockets"); // Import correct
+
+
 module.exports = (server) => {
 const io = socketIo(server, {
 cors: {
@@ -11,6 +13,7 @@ callback(null, true);
 callback(new Error("Not allowed by CORS"));
 }
 },
+
 allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept"],
 methods: ["GET", "POST", "PUT", "DELETE"],
 },
@@ -20,7 +23,7 @@ console.log("Client connected", socket.id);
 socket.on("disconnect", () => {
 console.log("Client disconnected", socket.id);
 });
-sockets(io, socket);
+configureSockets(io); 
 });
 return io;
 };
