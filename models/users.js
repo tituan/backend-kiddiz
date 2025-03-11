@@ -38,6 +38,7 @@ const userSchema = mongoose.Schema({
     type: String,
     enum: ["active", "banned", "pending"],
     default: "active",
+    iban : { type: String },
   },
 });
 

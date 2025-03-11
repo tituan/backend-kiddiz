@@ -34,6 +34,7 @@ router.post("/", async (req, res) => {
             itemType,
             condition,
             price,
+            iban,
         } = req.body;
 
         // Check if user exist
@@ -158,7 +159,7 @@ router.get('/', async (req, res) => {
 
         // Afficher tous les articles ou ceux qui correspondent au terme de recherche
         const articles = await Article.find(filter)
-            .populate('user', 'firstname note token address.city -_id');
+            .populate('user', 'firstname note token iban address.city -_id');
 
         // selection of the informations i want to share
         const articlesResponse = articles.map((article) => ({

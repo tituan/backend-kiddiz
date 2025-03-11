@@ -15,6 +15,7 @@ const { OAuth2Client } = require("google-auth-library");
 const emailRegex =
   /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
+  // Route to sign up
 router.post("/signup", async (req, res) => {
   try {
     //clean all  req.body is correct withouth spaces
@@ -164,7 +165,7 @@ router.post("/signup", async (req, res) => {
 });
 
 
-
+// Route to sign up with Google
 router.post('/signpGoogle', async (req, res) => {
   const { token } = req.body;
 
@@ -194,7 +195,7 @@ router.post('/signpGoogle', async (req, res) => {
   }
 });
 
-
+// Route to sign in
 router.post("/signin", async (req, res) => {
   try {
 
@@ -234,6 +235,7 @@ router.post("/signin", async (req, res) => {
   }
 });
 
+// Query to update the user's address
 router.put("/update/:token", async (req, res) => {
   try {
     
@@ -252,7 +254,7 @@ router.put("/update/:token", async (req, res) => {
     if (!checkBody(cleanedAddress, ['number', 'line1', 'zipCode', 'city'])) {
       return res.json({ result: false, error: 'Missing or empty address fields' });
     }
-
+ 
     // Find the user
     const userId = req.params.token;
     const user = await User.findById(userId);
@@ -283,6 +285,44 @@ router.put("/update/:token", async (req, res) => {
   }
 });
 
+// road to update user's iban
+
+  router.put("/update/:token", async (req, res) => {
+    try {
+      
+      // Clean all the fields
+      const ibanUser = {
+        iban: req.body.iban?.trim() || '',
+      };
+  
+      // Check if the body is correct
+      if (!checkBody(cleanedAddress, ['iban'])) {
+        return res.json({ result: false, error: 'Missing or empty address fields' });
+      }
+   
+      // Find the user
+      const userId = req.params.token;
+      const user = await User.findById(userId);
+  
+      if (!user) {
+        return res.status(404).json({ result: false, error: 'User not found' });
+      }
+  
+      user.iban = ibanUser;
+      const updateIbanUser = await user.save();
+  
+  
+      res.json({ result: true, iban : updateIbanUser });
+  
+    } catch (error) {
+      // Handle any errors
+      res.status(500).json({
+        result: false,
+        message: "An error has occurred.",
+        error: error.message,
+      });
+    }
+  });
 
 
 module.exports = router;
