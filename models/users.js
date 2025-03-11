@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
 const addressSchema = new Schema({
-  number: { type: Number },
+  number: { type: String },
   line1: { type: String },
   line2: { type: String }, // Optionnal
   zipCode: { type: Number },
@@ -40,6 +40,7 @@ const userSchema = mongoose.Schema({
     enum: ["active", "banned", "pending"],
     default: "active",
   },
+  articlesBought: [{ type: Schema.Types.ObjectId, ref: "articles" }],
 });
 
 
