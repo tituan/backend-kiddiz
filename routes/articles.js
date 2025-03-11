@@ -34,10 +34,12 @@ router.post("/", async (req, res) => {
             itemType,
             condition,
             price,
+            iban,
         } = req.body;
 
         // Check if user exist
         const user = await User.findOne({ token: token });
+
 
         // Price must be a positive number
         if (price < 0 || price > 999) {
@@ -120,7 +122,7 @@ router.post("/", async (req, res) => {
 
         // Save the new article
         const savedArticle = await newArticle.save();
-
+        const savedUser = await User.updateOne({ token: token },{ $set: { iban: iban } });
         // selection of the informations i want to share
         const articleResponse = {
             title: savedArticle.title,
@@ -134,7 +136,7 @@ router.post("/", async (req, res) => {
         };
 
         // Réponse avec le résultat
-        res.json({ result: true, article: articleResponse });
+        res.json({ result: true, article: articleResponse , user : savedUser});
     } catch (error) {
         // Gérer les erreurs éventuelles
         res.status(500).json({
@@ -533,6 +535,74 @@ router.put("/stock/:articleId", async (req, res) => {
         res.json({ result: true, message: "article deleted" });
     } catch (error) {
         // Handle potential errors
+        res.status(500).json({
+            result: false,
+            message: "An error has occurred.",
+            error: error.message,
+        });
+    }
+});
+
+// Buy article
+router.put("/buy", async (req, res) => {
+    try {
+        // Vérifier que tous les champs requis sont présents
+        if (!checkBody(req.body, ["number", "line1", "postalCode", "city", "state", "country", "token", "articleId"])) {
+            return res.status(400).json({ result: false, error: "Missing or empty fields" });
+        }
+
+        const { number, line1, line2, postalCode, city, state, country, token, articleId } = req.body;
+
+        // Vérifier si l'utilisateur existe
+        const user = await User.findOne({ token: token });
+        if (!user) {
+            return res.status(404).json({ result: false, error: "User not found" });
+        }
+
+        // Vérifier si l'article existe
+        const article = await Article.findById(articleId);
+        if (!article) {
+            return res.status(404).json({ result: false, error: "Article not found" });
+        }
+
+        // Vérifier si l'article est toujours en stock
+        if (article.availableStock === 0) {
+            return res.status(400).json({ result: false, error: "Article out of stock" });
+        }
+
+        // ✅ Mettre à jour l'adresse de l'acheteur en respectant `addressSchema`
+        user.address = {
+            number: number,
+            line1: line1,
+            line2: line2 || "", // Optionnel
+            zipCode: postalCode,
+            city: city,
+            state: state,
+            country: country
+        };
+        await user.save();
+
+        // ✅ Mettre à jour `availableStock` de l'article à `0`
+        article.availableStock = 0;
+        await article.save();
+
+        // ✅ Réponse avec les nouvelles données
+        res.json({
+            result: true,
+            message: "Achat validé. Adresse mise à jour et stock modifié.",
+            user: {
+                firstname: user.firstname,
+                lastname: user.lastname,
+                address: user.address,
+            },
+            article: {
+                title: article.title,
+                availableStock: article.availableStock,
+            }
+        });
+
+    } catch (error) {
+        console.error("Erreur lors de l'achat :", error);
         res.status(500).json({
             result: false,
             message: "An error has occurred.",

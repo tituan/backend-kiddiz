@@ -34,6 +34,7 @@ const userSchema = mongoose.Schema({
   socketId: { type: String },
   googleAuth: Boolean,
   terms: termsSchema, // Terms and conditions
+  iban: { type: String },
   status: {
     type: String,
     enum: ["active", "banned", "pending"],
