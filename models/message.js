@@ -14,9 +14,9 @@
 const mongoose = require('mongoose');
 
 const messageSchema = new mongoose.Schema({
-  conversationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Conversation' },
-  sender: { type: String, required: true }, // ID du sender
-  receiver: { type: String, required: true }, // ID du receiver
+  conversationId: { type: mongoose.Schema.Types.ObjectId, ref: 'conversations' },
+  sender: {  type: mongoose.Schema.Types.ObjectId, ref: "users"}, // ID du sender
+  receiver: {  type: mongoose.Schema.Types.ObjectId, ref: "users"}, // ID du receiver
   content: { type: String, required: true }, // Contenu du message
   timestamp: { type: Date, default: Date.now },
 });

@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
 const addressSchema = new Schema({
-  number: { type: Number },
+  number: { type: String },
   line1: { type: String },
   line2: { type: String }, // Optionnal
   zipCode: { type: Number },
@@ -34,11 +34,13 @@ const userSchema = mongoose.Schema({
   socketId: { type: String },
   googleAuth: Boolean,
   terms: termsSchema, // Terms and conditions
+  iban: { type: String },
   status: {
     type: String,
     enum: ["active", "banned", "pending"],
     default: "active",
   },
+  articlesBought: [{ type: Schema.Types.ObjectId, ref: "articles" }],
 });
 
 

@@ -7,6 +7,8 @@ const mongoose = require("mongoose");
 const uniqid = require("uniqid");
 const cloudinary = require("cloudinary").v2;
 const fs = require("fs");
+const { emit, send } = require("process");
+const nodemailer = require("nodemailer");
 
 // Create an article
 router.post("/", async (req, res) => {
@@ -34,10 +36,12 @@ router.post("/", async (req, res) => {
             itemType,
             condition,
             price,
+            iban,
         } = req.body;
 
         // Check if user exist
         const user = await User.findOne({ token: token });
+
 
         // Price must be a positive number
         if (price < 0 || price > 999) {
@@ -120,7 +124,7 @@ router.post("/", async (req, res) => {
 
         // Save the new article
         const savedArticle = await newArticle.save();
-
+        const savedUser = await User.updateOne({ token: token },{ $set: { iban: iban } });
         // selection of the informations i want to share
         const articleResponse = {
             title: savedArticle.title,
@@ -134,7 +138,7 @@ router.post("/", async (req, res) => {
         };
 
         // Réponse avec le résultat
-        res.json({ result: true, article: articleResponse });
+        res.json({ result: true, article: articleResponse , user : savedUser});
     } catch (error) {
         // Gérer les erreurs éventuelles
         res.status(500).json({
@@ -633,6 +637,142 @@ router.put("/stock/:articleId", async (req, res) => {
         res.json({ result: true, message: "article deleted" });
     } catch (error) {
         // Handle potential errors
+        res.status(500).json({
+            result: false,
+            message: "An error has occurred.",
+            error: error.message,
+        });
+    }
+});
+
+// Buy article
+router.put("/buy/buy/buy", async (req, res) => {
+    try {
+        // Vérifier que tous les champs requis sont présents
+        if (!checkBody(req.body, ["number", "line1", "postalCode", "city", "token", "articleId"])) {
+            return res.status(400).json({ result: false, error: "Missing or empty fields" });
+        }
+
+        const { number, line1, line2, postalCode, city, token, articleId } = req.body;
+
+        // Vérifier si l'utilisateur existe
+        const buyer = await User.findOne({ token: token });
+        if (!buyer) {
+            return res.status(404).json({ result: false, error: "User not found" });
+        }
+        console.log("User:", buyer);
+
+        // Vérifier si l'article existe
+        const article = await Article.findById(articleId).populate("user", "firstname lastname email iban");
+        if (!article) {
+            return res.status(404).json({ result: false, error: "Article not found" });
+        }
+
+        const seller = article.user;
+
+        // Vérifier si l'article est toujours en stock
+        if (article.availableStock === 0) {
+            return res.status(400).json({ result: false, error: "Article out of stock" });
+        }
+
+        //  Mettre à jour l'adresse de l'acheteur en respectant `addressSchema`
+        buyer.address = {
+            number: number,
+            line1: line1,
+            line2: line2 || "", // Optionnel
+            zipCode: postalCode,
+            city: city,
+        };
+        
+        if (!buyer.articlesBought.includes(articleId)) {
+            buyer.articlesBought.push(articleId);
+        }
+        await buyer.save();
+
+        // Mettre à jour `availableStock` de l'article à `0`
+        article.availableStock = 0;
+        article.boughtBy = buyer._id;
+
+        await article.save();
+
+        const transporter = nodemailer.createTransport({
+            host: process.env.SMTP_HOST,
+            port: parseInt(process.env.SMTP_PORT),
+            secure: false,
+            auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS,
+            },
+        });
+    
+        //send mail to buyer
+        const mailToSeller = {
+            from: process.env.EMAIL_FROM,
+            to: seller.email,
+            subject: "Votre article a été vendu !",
+            text: `Bonjour ${seller.firstname}, 
+    
+    Votre article "${article.title}" a été acheté par :
+    
+    Nom : ${buyer.firstname} ${buyer.lastname}
+    Email : ${buyer.email}
+    Adresse : ${buyer.address.number} ${buyer.address.line1}, ${buyer.address.city}, ${buyer.address.zipCode}
+    
+    Merci d'attendre la réception du paiement sur votre IBAN (${seller.iban}) avant d'expédier l'article.
+    
+    Cordialement,
+    L'équipe Kiddiz`,
+        };
+    
+        await transporter.sendMail(mailToSeller);
+
+            //send mail to buyer
+        const totalPrice = (article.price + 3.99).toFixed(2);  // tofixed(2) pour avoir 2 chiffres après la virgule pour le prix
+        //send mail to buyer
+    const mailToBuyer = {
+        from: process.env.EMAIL_FROM,
+        to: buyer.email,
+        subject: "Confirmation d'achat - Paiement requis",
+        text: `Bonjour ${buyer.firstname}, 
+
+Merci pour votre achat sur Kiddiz ! Voici votre facture :
+
+Article : ${article.title}
+Description : ${article.description}
+Prix : ${article.price}€
+Frais de livraison : 3.99€
+Total à payer : ${totalPrice}€
+
+Merci d'effectuer le paiement sur l'IBAN du vendeur avant qu'il puisse expédier l'article :
+IBAN du vendeur : ${seller.iban}
+
+Une fois le paiement effectué, votre article vous sera expédié à l'adresse :
+${buyer.address.number} ${buyer.address.line1}, ${buyer.address.city}, ${buyer.address.zipCode}
+
+Merci pour votre confiance !
+L'équipe Kiddiz`,
+    };
+// Envoi du mail
+    await transporter.sendMail(mailToBuyer);
+
+
+        //  Réponse avec les nouvelles données
+        res.json({
+            result: true,
+            message: "Achat validé. Adresse mise à jour et stock modifié.",
+            buyer: {
+                firstname: buyer.firstname,
+                lastname: buyer.lastname,
+                address: buyer.address,
+            },
+            article: {
+                title: article.title,
+                availableStock: article.availableStock,
+            }
+        });
+
+    } catch (error) {
+        console.error("Erreur lors de l'achat :", error);
         res.status(500).json({
             result: false,
             message: "An error has occurred.",
