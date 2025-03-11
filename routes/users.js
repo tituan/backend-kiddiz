@@ -283,6 +283,46 @@ router.put("/update/:token", async (req, res) => {
   }
 });
 
+router.put("/update/:token", async (req, res) => {
+  try {
+    
+    // Clean all the fields
+    const ibanUser = {
+      iban: req.body.iban?.trim() || '',
+    };
+
+    // Check if the body is correct
+    if (!checkBody(cleanedAddress, ['iban'])) {
+      return res.json({ result: false, error: 'Missing or empty address fields' });
+    }
+
+    // Find the user
+    const userId = req.params.token;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ result: false, error: 'User not found' });
+    }
+
+    user.iban = ibanUser;
+    const updatedUser = await user.save();
+
+    const userResponse = {
+      iban: updatedUser.iban,
+    };
+
+    res.json({ result: true, userResponse });
+
+  } catch (error) {
+    // Handle any errors
+    res.status(500).json({
+      result: false,
+      message: "An error has occurred.",
+      error: error.message,
+    });
+  }
+});
+
 router.get("/get-by-token/:token", async (req, res) => {
   try {
       const { token } = req.params;
