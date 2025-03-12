@@ -343,12 +343,16 @@ router.get('/sold-by/seller/:token', async (req, res) => {
         // Seller
         const user = await User.findOne({ token: req.params.token })
 
+          if (!user) {
+            return res
+                .status(404)
+                .json({ result: false, error: "No user not found" });
+        }
+
         const articles = await Article.find({ user: user._id, availableStock: 0 })
-            .populate('user', 'firstname lastname followers note address.city token -_id')
-            .populate('usersLikers', 'token -_id');
-            //.populate('boughtBuy', 'blablabla')
-         
-        // Check if the id is exist in database
+        .populate('user', 'firstname lastname email token -_id')
+        .populate('boughtBy', 'firstname token -_id')
+
         if (!articles || articles.length === 0) {
             return res
                 .status(404)
@@ -359,20 +363,62 @@ router.get('/sold-by/seller/:token', async (req, res) => {
         const articlesResponse = articles.map(article => ({
             id: article._id,
             title: article.title,
-            productDescription: article.productDescription,
+            price: article.price,
             category: article.category,
             itemType: article.itemType,
             condition: article.condition,
-            price: article.price,
+            productDescription: article.productDescription,
             pictures: article.pictures,
-            articleCreationDate: article.articleCreationDate,
-            likesCount: article.usersLikers.length, // Ajout du nombre de likes
             availableStock: article.availableStock,
+            likesCount: article.usersLikers.length,
             user: article.user,
-            usersLikers: article.usersLikers,
+            boughtBy: article.boughtBy
         }));
 
         res.json({ result: true, articles: articlesResponse });
+
+    } catch (error) {
+        res
+            .status(500)
+            .json({
+                result: false,
+                message: "An error has occurred.",
+                error: error.message,
+            });
+    }
+})
+
+// Display bought articles by Buyer
+router.get('/bought-by/buyer/:token', async (req, res) => {
+
+    try {
+
+        // Buyer
+        const user = await User.findOne({ token: req.params.token })
+        .populate({
+            path: 'articlesBought',
+            select: 'title price pictures category condition productDescription itemType availableStock user',
+            populate: {
+                path: 'user',
+                select: 'firstname -_id'
+            }
+        });
+         
+        if (!user) {
+            return res
+                .status(404)
+                .json({ result: false, error: "User not found" });
+        }
+
+        const userResponse = ({
+            firstname: user.firstname,
+            lastname: user.lastname,
+            email: user.email,
+            token: user.token,
+            articlesBought: user.articlesBought,
+        });
+
+        res.json({ result: true, user: userResponse });
 
     } catch (error) {
         res
