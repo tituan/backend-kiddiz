@@ -125,6 +125,7 @@ router.post("/", async (req, res) => {
         // Save the new article
         const savedArticle = await newArticle.save();
         const savedUser = await User.updateOne({ token: token },{ $set: { iban: iban } });
+        
         // selection of the informations i want to share
         const articleResponse = {
             title: savedArticle.title,
@@ -192,21 +193,21 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Display articles by likes
-router.get('/popular', async (req, res) => {
+// Display articles by date
+router.get('/recent', async (req, res) => {
 
     try {
 
         const articles = await Article.find({ availableStock: { $gt: 0 } })
             .populate('user', 'firstname note token address.city -_id')
             .populate('usersLikers', 'token -_id')
-            .sort({ 'usersLikers': -1 }); // Trier par nombre de likes
+            .sort({  articleCreationDate: -1 });
 
         // Check if the id is exist in database
         if (!articles || articles.length === 0) {
             return res
                 .status(404)
-                .json({ result: false, error: "No articles not found" });
+                .json({ result: false, error: "articles not found" });
         }
 
         // Mapper les articles pour ne renvoyer que les informations souhaitées
@@ -826,5 +827,53 @@ L'équipe Kiddiz`,
         });
     }
 });
+
+// Ancienne route popular
+// router.get('/popular', async (req, res) => {
+//     try {
+//         const articles = await Article.aggregate([
+//             { $match: { availableStock: { $gt: 0 } } }, // Only available stock
+//             { $addFields: { likesCount: { $size: "$usersLikers" } } }, // Compute likes count
+//             { $sort: { likesCount: -1 } }, // Sort by likes count descending
+//             { $lookup: { 
+//                 from: "users", 
+//                 localField: "user", 
+//                 foreignField: "_id", 
+//                 as: "userData"
+//             }},
+//             { $unwind: "$userData" }, // Convert user array to object
+//             { 
+//                 $project: {
+//                     _id: 1,
+//                     title: 1,
+//                     productDescription: 1,
+//                     category: 1,
+//                     itemType: 1,
+//                     condition: 1,
+//                     price: 1,
+//                     pictures: 1,
+//                     articleCreationDate: 1,
+//                     likesCount: 1,
+//                     availableStock: 1,
+//                     user: {
+//                         firstname: "$userData.firstname",
+//                         note: "$userData.note",
+//                         token: "$userData.token",
+//                         city: "$userData.address.city",
+//                     },
+//                     usersLikers: 1
+//                 }
+//             }
+//         ]);
+
+//         if (!articles || articles.length === 0) {
+//             return res.status(404).json({ result: false, error: "articles not found" });
+//         }
+
+//         res.json({ result: true, articles });
+//     } catch (error) {
+//         res.status(500).json({ result: false, message: "An error has occurred.", error: error.message });
+//     }
+// });
 
 module.exports = router;
