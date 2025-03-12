@@ -6,7 +6,7 @@ const Conversation = require("../models/conversation.js");
 const { ObjectId } = require("mongodb");
 const Article = require("../models/articles.js");
 
-// 🔹 Créer un nouveau message
+// Créer un nouveau message
 router.post("/new", async (req, res) => {
   try {
     const { sender, content, conversationId } = req.body;
@@ -201,7 +201,8 @@ router.get("/list/:token", async (req, res) => {
       const lastMessage = messages[0];
       const otherPerson = lastMessage.receiver._id.toString() === user._id.toString() ? lastMessage.sender.name : lastMessage.receiver.name
       return { _id: c._id, otherPerson, lastMessage }
-    })
+    }).sort((a, b) => b.lastMessage?.date - a.lastMessage?.date)
+    
 
     res.json({ success: true, formattedConversations })
   } catch (e) {
