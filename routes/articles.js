@@ -397,7 +397,7 @@ router.get('/bought-by/buyer/:token', async (req, res) => {
         const user = await User.findOne({ token: req.params.token })
         .populate({
             path: 'articlesBought',
-            select: 'title price pictures user',
+            select: 'title price pictures category condition productDescription itemType availableStock user',
             populate: {
                 path: 'user',
                 select: 'firstname -_id'
@@ -415,7 +415,7 @@ router.get('/bought-by/buyer/:token', async (req, res) => {
             lastname: user.lastname,
             email: user.email,
             token: user.token,
-            articlesBought: user.articlesBought
+            articlesBought: user.articlesBought,
         });
 
         res.json({ result: true, user: userResponse });
