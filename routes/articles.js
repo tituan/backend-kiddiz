@@ -138,7 +138,7 @@ router.post("/", async (req, res) => {
         };
 
         // Réponse avec le résultat
-        res.json({ result: true, article: articleResponse , user : savedUser});
+        res.json({ result: true, article: articleResponse , user : savedUser.token, userIban: savedUser.iban});
     } catch (error) {
         // Gérer les erreurs éventuelles
         res.status(500).json({
@@ -738,12 +738,12 @@ router.put("/buy/buy/buy", async (req, res) => {
 Merci pour votre achat sur Kiddiz ! Voici votre facture :
 
 Article : ${article.title}
-Description : ${article.description}
 Prix : ${article.price}€
-Frais de livraison : 3.99€
+Frais de livraison : 1.99€
 Total à payer : ${totalPrice}€
 
-Merci d'effectuer le paiement sur l'IBAN du vendeur avant qu'il puisse expédier l'article :
+Merci d’effectuer le paiement sur le compte bancaire du vendeur via son IBAN afin qu’il puisse expédier l’article.
+
 IBAN du vendeur : ${seller.iban}
 
 Une fois le paiement effectué, votre article vous sera expédié à l'adresse :
