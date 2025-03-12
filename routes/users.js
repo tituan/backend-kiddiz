@@ -145,7 +145,7 @@ router.post("/signup", async (req, res) => {
       from: process.env.EMAIL_FROM,
       to: cleanedBody.email, // Email du client
       subject: "Accusé de réception de votre demande",
-      text: `Bonjour ${userResponse.firstname},\nNous avons le plaisir de vous compter parmis nous et vous souhaitons d'agréable moments chez KIDDIZ !! `,
+      text: `Bonjour ${userResponse.firstname},\n\nNous avons le plaisir de vous compter parmis nous et vous souhaitons d'agréables moments chez KIDDIZ !! \n\nCordialement,\nL'équipe KIDDIZ`,
     };
 
     await transporter.sendMail(mailToClient);
@@ -164,7 +164,7 @@ router.post("/signup", async (req, res) => {
 });
 
 
-
+// router to sign up with google
 router.post('/signpGoogle', async (req, res) => {
   const { token } = req.body;
 
@@ -194,7 +194,7 @@ router.post('/signpGoogle', async (req, res) => {
   }
 });
 
-
+// roauter to sign in 
 router.post("/signin", async (req, res) => {
   try {
 
