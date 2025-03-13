@@ -207,7 +207,7 @@ router.post("/signin", async (req, res) => {
 
     // Check if the email is valid
     if (!emailRegex.test(req.body.email)) {
-      res.json({ result: false, error: "Invalid email" });
+      res.json({ result: false, error: "Format d'email invalide" });
       return;
     }
     // Find the user
@@ -222,7 +222,7 @@ router.post("/signin", async (req, res) => {
     if (userData && bcrypt.compareSync(req.body.password, userData.password)) {
       res.json({ result: true, userData });
     } else {
-      res.json({ result: false, error: "User not found or wrong password" });
+      res.json({ result: false, error: "Email ou mot de passe invalide" });
     }
   } catch (error) {
     // Handle any errors
