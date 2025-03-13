@@ -302,7 +302,7 @@ router.get('/get-by/seller/:token', async (req, res) => {
         // Check if the id is exist in database
         if (!articles || articles.length === 0) {
             return res
-                .status(404)
+                .status(200)
                 .json({ result: false, error: "No articles not found" });
         }
 
