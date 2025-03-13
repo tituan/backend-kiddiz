@@ -197,8 +197,10 @@ router.get("/list/:token", async (req, res) => {
     ])
 
     const formattedConversations = conversationsList.map((c) => {
-      const messages = c.messages.sort((a, b) => a.date - b.date);
+      
+      const messages = c.messages.sort((a, b) => b.date - a.date);
       const lastMessage = messages[0];
+      // console.log({ _id: c._id, otherPerson: lastMessage.receiver._id.toString() === user._id.toString() ? lastMessage.sender.name : lastMessage.receiver.name, lastMessage:  messages[0] });
       const otherPerson = lastMessage.receiver._id.toString() === user._id.toString() ? lastMessage.sender.name : lastMessage.receiver.name
       return { _id: c._id, otherPerson, lastMessage }
     }).sort((a, b) => b.lastMessage?.date - a.lastMessage?.date)
