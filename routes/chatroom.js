@@ -16,7 +16,7 @@ router.post("/new", async (req, res) => {
 
     const senderDoc = await User.findOne({ token: sender }).select("_id")
     const conversation = await Conversation.findById(conversationId)
-    const receiver = conversation.participants[1]
+    const receiver = conversation.participants.find((e) => e.toString() !== senderDoc._id.toString())
 
     if (!senderDoc) {
       return res.status(404).json({ message: "User not found" });
@@ -200,7 +200,7 @@ router.get("/list/:token", async (req, res) => {
       
       const messages = c.messages.sort((a, b) => b.date - a.date);
       const lastMessage = messages[0];
-      // console.log({ _id: c._id, otherPerson: lastMessage.receiver._id.toString() === user._id.toString() ? lastMessage.sender.name : lastMessage.receiver.name, lastMessage:  messages[0] });
+      console.log({ _id: c._id, otherPerson: lastMessage.receiver._id.toString() === user._id.toString() ? lastMessage.sender.name : lastMessage.receiver.name, lastMessage:  messages[0] });
       const otherPerson = lastMessage.receiver._id.toString() === user._id.toString() ? lastMessage.sender.name : lastMessage.receiver.name
       return { _id: c._id, otherPerson, lastMessage }
     }).sort((a, b) => b.lastMessage?.date - a.lastMessage?.date)
