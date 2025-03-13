@@ -346,7 +346,7 @@ router.get('/sold-by/seller/:token', async (req, res) => {
 
           if (!user) {
             return res
-                .status('!user ------->',404)
+                .status(404)
                 .json({ result: false, error: "User not found" });
         }
 
@@ -356,7 +356,7 @@ router.get('/sold-by/seller/:token', async (req, res) => {
 
         if (!articles || articles.length === 0) {
             return res
-                .status('!articles ------->',404)
+                .status(404)
                 .json({ result: false, error: "Articles not found" });
         }
 
