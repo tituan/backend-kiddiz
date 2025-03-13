@@ -346,8 +346,8 @@ router.get('/sold-by/seller/:token', async (req, res) => {
 
           if (!user) {
             return res
-                .status(404)
-                .json({ result: false, error: "No user not found" });
+                .status('!user ------->',404)
+                .json({ result: false, error: "User not found" });
         }
 
         const articles = await Article.find({ user: user._id, availableStock: 0 })
@@ -356,8 +356,8 @@ router.get('/sold-by/seller/:token', async (req, res) => {
 
         if (!articles || articles.length === 0) {
             return res
-                .status(404)
-                .json({ result: false, error: "No articles not found" });
+                .status('!articles ------->',404)
+                .json({ result: false, error: "Articles not found" });
         }
 
         // Mapper les articles pour ne renvoyer que les informations souhaitées
