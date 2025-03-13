@@ -3,13 +3,9 @@ var express = require("express");
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
-const http = require("http");
 const cors = require("cors");
 const fileUpload = require("express-fileupload");
-const socketConfig = require("./socketsio/config"); 
 
-
-const sockets = require("./socketsio/sockets"); // Import de Socket.IO
 require("./models/connection"); // Connexion MongoDB
 
 var indexRouter = require("./routes/index");
@@ -19,7 +15,6 @@ var favoritesRouter = require("./routes/favorites");
 var chatRoomRouter = require("./routes/chatroom");
 
 var app = express();
-var server = http.createServer(app);
 
 app.use(cors());
 app.use(fileUpload());
@@ -37,9 +32,4 @@ app.use("/favorites", favoritesRouter);
 app.use("/chatroom", chatRoomRouter);
 
 
-
-
-const io = socketConfig(server);
-
-
-module.exports = { app, server };
+module.exports = app ;
