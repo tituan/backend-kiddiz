@@ -614,7 +614,7 @@ router.put("/:articleId", async (req, res) => {
 
         // Handle picture update if a new picture is provided
         if (req.files && req.files.pictures) {
-            const photoPath = `/tmp/${uniqid()}.jpg`;
+            const photoPath = `./tmp/${uniqid()}.jpg`;
             const resultMove = await req.files.pictures.mv(photoPath);
 
             if (!resultMove) {
