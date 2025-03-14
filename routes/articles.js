@@ -350,7 +350,7 @@ router.get('/sold-by/seller/:token', async (req, res) => {
                 .json({ result: false, error: "User not found" });
         }
 
-        const articles = await Article.find({ user: user._id, availableStock: 0 })
+        const articles = await Article.find({ user: user._id, availableStock: 0, boughtBy: { $ne: null }  })
         .populate('user', 'firstname lastname email token -_id')
         .populate('boughtBy', 'firstname token -_id')
 
