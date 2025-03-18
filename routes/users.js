@@ -258,7 +258,7 @@ router.put("/update/:token", async (req, res) => {
     // Find the user
     const userId = req.params.token;
     const user = await User.findById(userId);
-
+    
     if (!user) {
       return res.status(404).json({ result: false, error: 'User not found' });
     }
@@ -311,7 +311,7 @@ router.put("/update/:token", async (req, res) => {
       user.iban = ibanUser;
       const updateIbanUser = await user.save();
   
-  
+      // 
       res.json({ result: true, iban : updateIbanUser });
   
     } catch (error) {
