@@ -71,39 +71,51 @@ router.post('/', async (req, res) => {
     }
 });
 
-// Display article by likes so that the user can see his likes
 router.get('/:userToken', async (req, res) => {
-
     try {
-
         const userToken = req.params.userToken;
 
-        // Check if user exist
+        // Vérifier si l'utilisateur existe
         const user = await User.findOne({ token: userToken });
         if (!user) {
             return res.status(404).json({ result: false, error: "User not found" });
         }
 
-        // Check if user has some favoriteArticles
-        const articles = await FavoriteArticle.find({ user: user._id })
-            .populate('articles');
+        // Vérifier si l'utilisateur a des articles favoris
+        const favoriteArticles = await FavoriteArticle.findOne({ user: user._id }).populate('articles');
 
-        // Check if there is articles to display
-        if (!articles) {
-            return res.status(204).json({ result: false, error: "Articles not found" });
+        // Vérifier si l'utilisateur a des articles favoris
+        if (!favoriteArticles || favoriteArticles.articles.length === 0) {
+            return res.json({ result: false, error: "No favorite articles found" });
         }
 
-        res.json({ result: true, article: articles });
+        // Créer la réponse avec les informations nécessaires
+        const articlesResponse = favoriteArticles.articles.map((article) => {
 
+            return {
+                id: article.id,
+                title: article.title,
+                productDescription: article.productDescription,
+                category: article.category,
+                itemType: article.itemType,
+                condition: article.condition,
+                price: article.price,
+                pictures: article.pictures,
+                articleCreationDate: article.articleCreationDate,
+                likesCount: article.usersLikers.length,
+                availableStock: article.availableStock,
+                user: article.user,
+            };
+        });
+
+        res.json({ result: true, articles: articlesResponse });
     } catch (error) {
-        res
-            .status(500)
-            .json({
-                result: false,
-                message: "An error has occurred.",
-                error: error.message,
-            });
+        res.status(500).json({
+            result: false,
+            message: "An error has occurred.",
+            error: error.message,
+        });
     }
-})
+});
 
 module.exports = router;
