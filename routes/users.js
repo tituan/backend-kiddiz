@@ -231,6 +231,9 @@ router.post("/signin", async (req, res) => {
         email: userData.email,
         dateOfBirth: userData.dateOfBirth,
         token: userData.token,
+        iban: userData.iban,
+        address: userData.address,  
+        status: userData.status,
       };
 
       res.json({ result: true, userResponse });
