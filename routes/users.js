@@ -225,7 +225,15 @@ router.post("/signin", async (req, res) => {
       userData.token = uid2(32);  
       await userData.save();
       
-      res.json({ result: true, userData });
+      const userResponse = {
+        firstname: userData.firstname,
+        lastname: userData.lastname,
+        email: userData.email,
+        dateOfBirth: userData.dateOfBirth,
+        token: userData.token,
+      };
+
+      res.json({ result: true, userResponse });
     } else {
       res.json({ result: false, error: "Email ou mot de passe invalide" });
     }
