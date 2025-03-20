@@ -681,18 +681,19 @@ router.put("/buy/buy/buy", async (req, res) => {
             zipCode: postalCode,
             city: city,
         };
-
+        // Mettre à jour `articlesBought` de l'acheteur
         if (!buyer.articlesBought.includes(articleId)) {
             buyer.articlesBought.push(articleId);
         }
         await buyer.save();
 
-        // Mettre à jour `availableStock` de l'article à `0`
+        // Mettre à jour `availableStock` de l'article à `0`+ l'id de l'acheteur
         article.availableStock = 0;
         article.boughtBy = buyer._id;
 
         await article.save();
 
+        // Créer un transporteur pour envoyer des emails
         const transporter = nodemailer.createTransport({
             host: process.env.SMTP_HOST,
             port: parseInt(process.env.SMTP_PORT),
