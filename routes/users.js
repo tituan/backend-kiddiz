@@ -233,7 +233,7 @@ router.post("/signin", async (req, res) => {
         token: userData.token,
       };
 
-      res.json({ result: true, userResponse });
+      res.json({ result: true, userData });
     } else {
       res.json({ result: false, error: "Email ou mot de passe invalide" });
     }
