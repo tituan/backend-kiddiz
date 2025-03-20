@@ -487,7 +487,6 @@ router.get('/get-by/category/:category', async (req, res) => {
                 .json({ result: false, error: "Article not found" });
         }
 
-
         // selection of the informations i want to share
         const articleResponse = articles.map((article) => ({
             id: article.id,
