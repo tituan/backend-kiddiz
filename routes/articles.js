@@ -7,7 +7,6 @@ const mongoose = require("mongoose");
 const uniqid = require("uniqid");
 const cloudinary = require("cloudinary").v2;
 const fs = require("fs");
-const { emit, send } = require("process");
 const nodemailer = require("nodemailer");
 
 // Create an article
@@ -124,8 +123,8 @@ router.post("/", async (req, res) => {
 
         // Save the new article
         const savedArticle = await newArticle.save();
-        const savedUser = await User.updateOne({ token: token },{ $set: { iban: iban } });
-        
+        const savedUser = await User.updateOne({ token: token }, { $set: { iban: iban } });
+
         // selection of the informations i want to share
         const articleResponse = {
             title: savedArticle.title,
@@ -139,7 +138,7 @@ router.post("/", async (req, res) => {
         };
 
         // Réponse avec le résultat
-        res.json({ result: true, article: articleResponse , user : savedUser.token, userIban: savedUser.iban});
+        res.json({ result: true, article: articleResponse, user: savedUser.token, userIban: savedUser.iban });
     } catch (error) {
         // Gérer les erreurs éventuelles
         res.status(500).json({
@@ -201,7 +200,7 @@ router.get('/recent', async (req, res) => {
         const articles = await Article.find({ availableStock: { $gt: 0 } })
             .populate('user', 'firstname note token address.city -_id')
             .populate('usersLikers', 'token -_id')
-            .sort({  articleCreationDate: -1 });
+            .sort({ articleCreationDate: -1 });
 
         // Check if the id is exist in database
         if (!articles || articles.length === 0) {
@@ -241,54 +240,6 @@ router.get('/recent', async (req, res) => {
 })
 
 // Display articles by Seller
-router.get('/get-by/buyer/:token', async (req, res) => {
-
-    try {
-
-        const user = await User.findOne({ token: req.params.token })
-
-        const articles = await Article.find({ user: user._id, availableStock: { $gt: 0 } })
-            .populate('user', 'firstname lastname followers note address.city token -_id')
-            .populate('usersLikers', 'token -_id');
-    
-        // Check if the id is exist in database
-        if (!articles || articles.length === 0) {
-            return res
-                .status(404)
-                .json({ result: false, error: "No articles not found" });
-        }
-
-        // Mapper les articles pour ne renvoyer que les informations souhaitées
-        const articlesResponse = articles.map(article => ({
-            id: article._id,
-            title: article.title,
-            productDescription: article.productDescription,
-            category: article.category,
-            itemType: article.itemType,
-            condition: article.condition,
-            price: article.price,
-            pictures: article.pictures,
-            articleCreationDate: article.articleCreationDate,
-            likesCount: article.usersLikers.length, // Ajout du nombre de likes
-            availableStock: article.availableStock,
-            user: article.user,
-            usersLikers: article.usersLikers,
-        }));
-
-        res.json({ result: true, articles: articlesResponse });
-
-    } catch (error) {
-        res
-            .status(500)
-            .json({
-                result: false,
-                message: "An error has occurred.",
-                error: error.message,
-            });
-    }
-})
-
-// Display articles by Seller
 router.get('/get-by/seller/:token', async (req, res) => {
 
     try {
@@ -298,7 +249,7 @@ router.get('/get-by/seller/:token', async (req, res) => {
         const articles = await Article.find({ user: user._id, availableStock: { $gt: 0 } })
             .populate('user', 'firstname lastname followers note address.city token -_id')
             .populate('usersLikers', 'token -_id');
-    
+
         // Check if the id is exist in database
         if (!articles || articles.length === 0) {
             return res
@@ -344,15 +295,15 @@ router.get('/sold-by/seller/:token', async (req, res) => {
         // Seller
         const user = await User.findOne({ token: req.params.token })
 
-          if (!user) {
+        if (!user) {
             return res
                 .status(404)
                 .json({ result: false, error: "User not found" });
         }
 
-        const articles = await Article.find({ user: user._id, availableStock: 0, boughtBy: { $ne: null }  })
-        .populate('user', 'firstname lastname email token -_id')
-        .populate('boughtBy', 'firstname token -_id')
+        const articles = await Article.find({ user: user._id, availableStock: 0, boughtBy: { $ne: null } })
+            .populate('user', 'firstname lastname email token -_id')
+            .populate('boughtBy', 'firstname token -_id')
 
         if (!articles || articles.length === 0) {
             return res
@@ -396,15 +347,15 @@ router.get('/bought-by/buyer/:token', async (req, res) => {
 
         // Buyer
         const user = await User.findOne({ token: req.params.token })
-        .populate({
-            path: 'articlesBought',
-            select: 'title price pictures category condition productDescription itemType availableStock user',
-            populate: {
-                path: 'user',
-                select: 'firstname -_id'
-            }
-        });
-         
+            .populate({
+                path: 'articlesBought',
+                select: 'title price pictures category condition productDescription itemType availableStock user',
+                populate: {
+                    path: 'user',
+                    select: 'firstname -_id'
+                }
+            });
+
         if (!user) {
             return res
                 .status(404)
@@ -437,7 +388,7 @@ router.get('/get-by/id/:id', async (req, res) => {
 
     try {
 
-        const article = await Article.findOne({_id: req.params.id, availableStock: { $gt: 0 }})
+        const article = await Article.findOne({ _id: req.params.id, availableStock: { $gt: 0 } })
             .populate('user', 'firstname note address.city token -_id');
 
         // Check if the id exist in database
@@ -477,7 +428,7 @@ router.get('/get-by/id/:id', async (req, res) => {
 
 //Display articles by item type
 router.get('/get-by/type/:itemType', async (req, res) => {
-    
+
     try {
 
         const articles = await Article.find({ itemType: req.params.itemType, availableStock: { $gt: 0 } })
@@ -504,7 +455,7 @@ router.get('/get-by/type/:itemType', async (req, res) => {
             likesCount: article.usersLikers.length,
             availableStock: article.availableStock,
             user: article.user,
-        }));  
+        }));
 
         res.json({ result: true, article: articlesResponse });
 
@@ -521,11 +472,11 @@ router.get('/get-by/type/:itemType', async (req, res) => {
 );
 
 // Display articles by category
-router.get('/category/:category', async (req, res) => {
+router.get('/get-by/category/:category', async (req, res) => {
 
     try {
 
-        const articles = await Article.find({category: req.params.category, availableStock: { $gt: 0 } })
+        const articles = await Article.find({ category: req.params.category, availableStock: { $gt: 0 } })
             .populate('user', 'firstname note address.city token -_id');
 
 
@@ -534,7 +485,7 @@ router.get('/category/:category', async (req, res) => {
             return res
                 .status(404)
                 .json({ result: false, error: "Article not found" });
-            }
+        }
 
 
         // selection of the informations i want to share
@@ -564,7 +515,7 @@ router.get('/category/:category', async (req, res) => {
                 error: error.message,
             });
     };
-}   
+}
 );
 
 // Modify Article for Seller EN COURS
@@ -614,7 +565,7 @@ router.put("/:articleId", async (req, res) => {
 
         // Handle picture update if a new picture is provided
         if (req.files && req.files.pictures) {
-            const photoPath = `./tmp/${uniqid()}.jpg`;
+            const photoPath = `/tmp/${uniqid()}.jpg`;
             const resultMove = await req.files.pictures.mv(photoPath);
 
             if (!resultMove) {
@@ -676,7 +627,7 @@ router.put("/stock/:articleId", async (req, res) => {
 
         // Update the availableStock to 0
         article.availableStock = 0;
-       
+
         // Save the updated article
         await article.save();
 
@@ -730,7 +681,7 @@ router.put("/buy/buy/buy", async (req, res) => {
             zipCode: postalCode,
             city: city,
         };
-        
+
         if (!buyer.articlesBought.includes(articleId)) {
             buyer.articlesBought.push(articleId);
         }
@@ -751,7 +702,7 @@ router.put("/buy/buy/buy", async (req, res) => {
                 pass: process.env.SMTP_PASS,
             },
         });
-    
+
         //send mail to buyer
         const mailToSeller = {
             from: process.env.EMAIL_FROM,
@@ -770,17 +721,17 @@ router.put("/buy/buy/buy", async (req, res) => {
     Cordialement,
     L'équipe Kiddiz`,
         };
-    
+
         await transporter.sendMail(mailToSeller);
 
-            //send mail to buyer
+        //send mail to buyer
         const totalPrice = (article.price + 3.99).toFixed(2);  // tofixed(2) pour avoir 2 chiffres après la virgule pour le prix
         //send mail to buyer
-    const mailToBuyer = {
-        from: process.env.EMAIL_FROM,
-        to: buyer.email,
-        subject: "Confirmation d'achat - Paiement requis",
-        text: `Bonjour ${buyer.firstname}, 
+        const mailToBuyer = {
+            from: process.env.EMAIL_FROM,
+            to: buyer.email,
+            subject: "Confirmation d'achat - Paiement requis",
+            text: `Bonjour ${buyer.firstname}, 
 
 Merci pour votre achat sur Kiddiz ! Voici votre facture :
 
@@ -798,9 +749,9 @@ ${buyer.address.number} ${buyer.address.line1}, ${buyer.address.city}, ${buyer.a
 
 Merci pour votre confiance !
 L'équipe Kiddiz`,
-    };
-// Envoi du mail
-    await transporter.sendMail(mailToBuyer);
+        };
+        // Envoi du mail
+        await transporter.sendMail(mailToBuyer);
 
 
         //  Réponse avec les nouvelles données
@@ -827,53 +778,5 @@ L'équipe Kiddiz`,
         });
     }
 });
-
-// Ancienne route popular
-// router.get('/popular', async (req, res) => {
-//     try {
-//         const articles = await Article.aggregate([
-//             { $match: { availableStock: { $gt: 0 } } }, // Only available stock
-//             { $addFields: { likesCount: { $size: "$usersLikers" } } }, // Compute likes count
-//             { $sort: { likesCount: -1 } }, // Sort by likes count descending
-//             { $lookup: { 
-//                 from: "users", 
-//                 localField: "user", 
-//                 foreignField: "_id", 
-//                 as: "userData"
-//             }},
-//             { $unwind: "$userData" }, // Convert user array to object
-//             { 
-//                 $project: {
-//                     _id: 1,
-//                     title: 1,
-//                     productDescription: 1,
-//                     category: 1,
-//                     itemType: 1,
-//                     condition: 1,
-//                     price: 1,
-//                     pictures: 1,
-//                     articleCreationDate: 1,
-//                     likesCount: 1,
-//                     availableStock: 1,
-//                     user: {
-//                         firstname: "$userData.firstname",
-//                         note: "$userData.note",
-//                         token: "$userData.token",
-//                         city: "$userData.address.city",
-//                     },
-//                     usersLikers: 1
-//                 }
-//             }
-//         ]);
-
-//         if (!articles || articles.length === 0) {
-//             return res.status(404).json({ result: false, error: "articles not found" });
-//         }
-
-//         res.json({ result: true, articles });
-//     } catch (error) {
-//         res.status(500).json({ result: false, message: "An error has occurred.", error: error.message });
-//     }
-// });
 
 module.exports = router;

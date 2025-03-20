@@ -1,9 +1,8 @@
 var express = require("express");
 var router = express.Router();
 const User = require("../models/users.js");
-const Message = require("../models/message.js"); // 🔥 Vérification du nom du modèle
+const Message = require("../models/message.js");
 const Conversation = require("../models/conversation.js");
-const { ObjectId } = require("mongodb");
 const Article = require("../models/articles.js");
 
 // Créer un nouveau message
@@ -14,9 +13,13 @@ router.post("/new", async (req, res) => {
       return res.status(400).json({ message: "Tous les champs sont requis." });
     }
 
-    const senderDoc = await User.findOne({ token: sender }).select("_id")
-    const conversation = await Conversation.findById(conversationId)
-    const receiver = conversation.participants.find((e) => e.toString() !== senderDoc._id.toString())
+    const senderDoc = await User.findOne({ token: sender }).select("_id firstname lastname");
+
+    const conversation = await Conversation.findById(conversationId);
+
+    const receiverId = conversation.participants.find((e) => e.toString() !== senderDoc._id.toString());
+
+    const receiverDoc = await User.findById(receiverId).select("firstname lastname _id");
 
     if (!senderDoc) {
       return res.status(404).json({ message: "User not found" });
@@ -24,20 +27,22 @@ router.post("/new", async (req, res) => {
 
     const newMessage = new Message({
       sender: senderDoc._id,
-      receiver: receiver,
+      receiver: receiverDoc._id,
       content,
       conversationId,
-      // date: new Date(),
     });
 
-    //const message = await newMessage.save();
-    //res.status(201).json(message);
     const message = await newMessage.save();
+
     res.status(201).json({
-      ...message._doc,
-      date: message.timestamp, // ✅ Ajouter ceci
-      isOwnMessage: true // Facultatif selon ta logique
+      content: message.content,
+      conversationId: message.conversationId,
+      date: message.timestamp,
+      isOwnMessage: true,
+      sender: { name: senderDoc.firstname + " " + senderDoc.lastname }, 
+      receiver: { name: receiverDoc.firstname + " " + receiverDoc.lastname }
     });
+
   } catch (error) {
     console.error("Erreur lors de l'envoi du message :", error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -202,7 +207,17 @@ router.get("/list/:token", async (req, res) => {
       const lastMessage = messages[0];
       console.log({ _id: c._id, otherPerson: lastMessage.receiver._id.toString() === user._id.toString() ? lastMessage.sender.name : lastMessage.receiver.name, lastMessage:  messages[0] });
       const otherPerson = lastMessage.receiver._id.toString() === user._id.toString() ? lastMessage.sender.name : lastMessage.receiver.name
-      return { _id: c._id, otherPerson, lastMessage }
+      return { _id: c._id, 
+        otherPerson, 
+        lastMessage: {
+            conversationId: lastMessage.conversationId,
+            sender: { name: lastMessage.sender.name },
+            receiver: { name: lastMessage.receiver.name },
+            articleName: lastMessage.articleName,
+            articleUri: lastMessage.articleUri,
+            content: lastMessage.content,
+            date: lastMessage.date
+      } }
     }).sort((a, b) => b.lastMessage?.date - a.lastMessage?.date)
     
 
@@ -231,14 +246,12 @@ router.get("/messages/:token/:conversationId", async (req, res) => {
 
     res.json({ success: true, messages: formattedMessages });
   } catch (error) {
-    console.error("❌ Erreur lors de la récupération des messages :", error);
+    console.error("Erreur lors de la récupération des messages :", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
-
-// nouvelle route avec urser token qui va chercher l'id du user et ajhouter l'artcile id au click sur le btn nous contacter
-
+// nouvelle route avec user token qui va chercher l'id du user et ajouter l'artcile id au click sur le btn nous contacter
 router.get("/:token/:articleId", async (req, res) => {
   try {
     const { token, articleId } = req.params;
@@ -252,26 +265,27 @@ router.get("/:token/:articleId", async (req, res) => {
       return res.status(404).json({ message: "Article non trouvé." });
     }
 
-    // ✅ 3. Trouver le vendeur (seller) lié à l'article
-    const sellerID = article.user; // Assure-toi que `userId` est bien la clé du vendeur dans `Article`
-    console.log(sellerID)
+    const sellerID = article.user;
 
-    // ✅ 4. Vérifier si une conversation existe déjà entre buyer & seller sur cet article
     const conversation = await Conversation.findOne({
       articleId: articleId,
-      participants: { $all: [buyerID, sellerID] } // Vérifie que les 2 sont dans `participants`
+      participants: { $all: [buyerID, sellerID] }
     });
 
     if (conversation) {
-      console.log("✅ Conversation existante trouvée :", conversation);
-      return res.json(conversation); // Retourne la conversation existante
+      const filteredConversation = {
+        _id: conversation._id,
+        articleId: conversation.articleId,
+        createdAt: conversation.createdAt,
+      }
+      return res.json(filteredConversation);
     }
 
-    console.log("⚠️ Aucune conversation trouvée.");
+    console.log("Aucune conversation trouvée.");
     return res.status(404).json({ message: "Aucune conversation trouvée." });
 
   } catch (error) {
-    console.error("❌ Erreur lors de la récupération de la conversation :", error);
+    console.error("Erreur lors de la récupération de la conversation :", error);
     return res.status(500).json({ message: "Erreur interne du serveur" });
   }
 });

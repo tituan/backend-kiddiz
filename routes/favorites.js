@@ -71,8 +71,11 @@ router.post('/', async (req, res) => {
     }
 });
 
+// favorites of user
 router.get('/:userToken', async (req, res) => {
+
     try {
+
         const userToken = req.params.userToken;
 
         // Vérifier si l'utilisateur existe
@@ -104,7 +107,6 @@ router.get('/:userToken', async (req, res) => {
                 articleCreationDate: article.articleCreationDate,
                 likesCount: article.usersLikers.length,
                 availableStock: article.availableStock,
-                user: article.user,
             };
         });
 
