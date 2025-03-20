@@ -215,8 +215,11 @@ router.post("/signin", async (req, res) => {
     const userData = await User.findOne({ email: req.body.email });
 
     //check if user signup with google
-    if (userData.googleAuth) {
-      return res.status(400).json({ message: "Utilisateur déjà existant via une connexion Google, essayez de vous connecter." });
+    // if (userData.googleAuth) {
+    //   return res.status(400).json({ message: "Utilisateur déjà existant via une connexion Google, essayez de vous connecter." });
+    // }
+    if(!userData){
+      return res.status(400).json({ error: "Utilisateur non trouvé" });
     }
 
     // Check if the user exists and the password is correct
