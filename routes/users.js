@@ -195,7 +195,7 @@ router.post('/signpGoogle', async (req, res) => {
   }
 });
 
-// roauter to sign in 
+// router to sign in 
 router.post("/signin", async (req, res) => {
   try {
 
@@ -221,6 +221,10 @@ router.post("/signin", async (req, res) => {
 
     // Check if the user exists and the password is correct
     if (userData && bcrypt.compareSync(req.body.password, userData.password)) {
+      // Generate a new token
+      userData.token = uid2(32);  
+      await userData.save();
+      
       res.json({ result: true, userData });
     } else {
       res.json({ result: false, error: "Email ou mot de passe invalide" });
@@ -234,8 +238,37 @@ router.post("/signin", async (req, res) => {
     });
   }
 });
+// router logOut reset the token
 
-// Query to update the user's address
+router.put("/logout/:token", async (req, res) => {
+  try {
+    // Check if the token is provided
+    const { token } = req.params;
+    if (!token) {
+      return res.status(400).json({ message: "Token requis." });
+    }
+
+    // Find the user based on the token
+    const user = await User.findOne({ token });
+
+    // Check if the user exists
+    if (!user) {
+      return res.status(404).json({ message: "Utilisateur non trouvé." });
+    }
+
+    // Reset the user's token
+    user.token = null
+    await user.save();
+
+    // Respond with the user data
+    res.status(200).json({ message: "Déconnexion réussie." });
+  } catch (error) {
+    console.error("❌ Erreur lors de la déconnexion :", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// router to update the user's address
 router.put("/update/:token", async (req, res) => {
   try {
     // Check if the token is provided
@@ -252,13 +285,13 @@ router.put("/update/:token", async (req, res) => {
 
     // Clean and retrieve address fields
     const cleanedAddress = {
-      number: req.body.number ? Number(req.body.number) : undefined,
-      line1: req.body.line1?.trim() || undefined,
-      line2: req.body.line2?.trim() || undefined,
-      zipCode: req.body.zipCode ? Number(req.body.zipCode) : undefined,
-      city: req.body.city?.trim() || undefined,
-      state: req.body.state?.trim() || undefined,
-      country: req.body.country?.trim() || undefined,
+      number: req.body.number ? Number(req.body.number) : null,
+      line1: req.body.line1?.trim() || null,
+      line2: req.body.line2?.trim() || null,
+      zipCode: req.body.zipCode ? Number(req.body.zipCode) : null,
+      city: req.body.city?.trim() || null,
+      state: req.body.state?.trim() || null,
+      country: req.body.country?.trim() || null,
     };
 
     // Check if the required fields are provided
@@ -268,7 +301,7 @@ router.put("/update/:token", async (req, res) => {
 
     // Update only the provided fields to avoid overwriting existing data
     Object.keys(cleanedAddress).forEach(key => {
-      if (cleanedAddress[key] !== undefined) {
+      if (cleanedAddress[key] !== null) {
         user.address[key] = cleanedAddress[key];
       }
     });
@@ -297,7 +330,7 @@ router.put("/update/:token", async (req, res) => {
   }
 });
 
-
+// router to update the user's iban
 router.put("/iban/:token", async (req, res) => {
   try {
     // Récupérer et nettoyer l'IBAN
@@ -337,8 +370,8 @@ router.put("/iban/:token", async (req, res) => {
   }
 });
 
-// road to update user's iban
 
+// router to create the iban user
   router.put("/update/:token", async (req, res) => {
     try {
       
