@@ -827,53 +827,6 @@ L'équipe Kiddiz`,
         });
     }
 });
-
-// Ancienne route popular
-// router.get('/popular', async (req, res) => {
-//     try {
-//         const articles = await Article.aggregate([
-//             { $match: { availableStock: { $gt: 0 } } }, // Only available stock
-//             { $addFields: { likesCount: { $size: "$usersLikers" } } }, // Compute likes count
-//             { $sort: { likesCount: -1 } }, // Sort by likes count descending
-//             { $lookup: { 
-//                 from: "users", 
-//                 localField: "user", 
-//                 foreignField: "_id", 
-//                 as: "userData"
-//             }},
-//             { $unwind: "$userData" }, // Convert user array to object
-//             { 
-//                 $project: {
-//                     _id: 1,
-//                     title: 1,
-//                     productDescription: 1,
-//                     category: 1,
-//                     itemType: 1,
-//                     condition: 1,
-//                     price: 1,
-//                     pictures: 1,
-//                     articleCreationDate: 1,
-//                     likesCount: 1,
-//                     availableStock: 1,
-//                     user: {
-//                         firstname: "$userData.firstname",
-//                         note: "$userData.note",
-//                         token: "$userData.token",
-//                         city: "$userData.address.city",
-//                     },
-//                     usersLikers: 1
-//                 }
-//             }
-//         ]);
-
-//         if (!articles || articles.length === 0) {
-//             return res.status(404).json({ result: false, error: "articles not found" });
-//         }
-
-//         res.json({ result: true, articles });
-//     } catch (error) {
-//         res.status(500).json({ result: false, message: "An error has occurred.", error: error.message });
-//     }
-// });
+ 
 
 module.exports = router;
