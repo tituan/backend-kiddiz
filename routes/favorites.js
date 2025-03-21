@@ -71,6 +71,7 @@ router.post('/', async (req, res) => {
     }
 });
 
+// Get all favorite articles of a user
 router.get('/:userToken', async (req, res) => {
 
     try {
