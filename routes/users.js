@@ -15,7 +15,7 @@ const { OAuth2Client } = require("google-auth-library");
 const emailRegex =
   /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
-  // Route to sign up
+// Route to sign up
 router.post("/signup", async (req, res) => {
   try {
     //clean all  req.body is correct withouth spaces
@@ -214,10 +214,6 @@ router.post("/signin", async (req, res) => {
     // Find the user
     const userData = await User.findOne({ email: req.body.email });
 
-    //check if user signup with google
-    // if (userData.googleAuth) {
-    //   return res.status(400).json({ message: "Utilisateur déjà existant via une connexion Google, essayez de vous connecter." });
-    // }
     if(!userData){
       return res.status(400).json({ error: "Utilisateur non trouvé" });
     }
@@ -278,7 +274,7 @@ router.put("/logout/:token", async (req, res) => {
     // Respond with the user data
     res.status(200).json({ message: "Déconnexion réussie." });
   } catch (error) {
-    console.error("❌ Erreur lors de la déconnexion :", error);
+    console.error("Erreur lors de la déconnexion :", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
@@ -342,111 +338,6 @@ router.put("/update/:token", async (req, res) => {
       message: "An error has occurred.",
       error: error.message,
     });
-  }
-});
-
-// router to update the user's iban
-router.put("/iban/:token", async (req, res) => {
-  try {
-    // Récupérer et nettoyer l'IBAN
-    const iban = req.body.iban?.trim() || '';
-
-    // Vérifier si l'IBAN est fourni
-    if (!iban) {
-      return res.json({ result: false, error: "Missing or empty IBAN field" });
-    }
-
-    // Vérifier si le token est fourni
-    const userToken = req.params.token;
-    if (!userToken) {
-      return res.status(400).json({ result: false, error: "Token is missing" });
-    }
-
-    // Trouver et mettre à jour l'utilisateur
-    const updatedUser = await User.findOneAndUpdate(
-      { token: userToken },
-      { $set: { iban } },
-      { new: true } // Renvoie l'utilisateur mis à jour
-    );
-
-    if (!updatedUser) {
-      return res.status(404).json({ result: false, error: "User not found" });
-    }
-
-    // Répondre avec l'IBAN mis à jour
-    res.json({ result: true, iban: updatedUser.iban });
-
-  } catch (error) {
-    res.status(500).json({
-      result: false,
-      message: "An error has occurred.",
-      error: error.message,
-    });
-  }
-});
-
-
-// router to create the iban user
-  router.put("/update/:token", async (req, res) => {
-    try {
-      
-      // Clean all the fields
-      const ibanUser = {
-        iban: req.body.iban?.trim() || '',
-      };
-  
-      // Check if the body is correct
-      if (!checkBody(cleanedAddress, ['iban'])) {
-        return res.json({ result: false, error: 'Missing or empty address fields' });
-      }
-   
-      // Find the user
-      const userId = req.params.token;
-      const user = await User.findById(userId);
-  
-      if (!user) {
-        return res.status(404).json({ result: false, error: 'User not found' });
-      }
-  
-      user.iban = ibanUser;
-      const updateIbanUser = await user.save();
-  
-      // 
-      res.json({ result: true, iban : updateIbanUser });
-  
-    } catch (error) {
-      // Handle any errors
-      res.status(500).json({
-        result: false,
-        message: "An error has occurred.",
-        error: error.message,
-      });
-    }
-  });
-
-  // router to get the user by token
-router.get("/get-by-token/:token", async (req, res) => {
-  try {
-      const { token } = req.params;
-
-      // 🔹 Vérifier que le token est bien fourni
-      if (!token) {
-          return res.status(400).json({ message: "Token requis." });
-      }
-
-      // 🔹 Chercher l'utilisateur correspondant au token
-      const user = await User.findOne({ token }).select("firstname lastname token");
-
-      // 🔹 Vérifier si l'utilisateur existe
-      if (!user) {
-          return res.status(404).json({ message: "Utilisateur non trouvé." });
-      }
-
-      // 🔹 Retourner les informations de l'utilisateur
-      res.status(200).json(user);
-  } catch (error) {
-      console.error("❌ Erreur lors de la récupération de l'utilisateur :", error);
-      res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
