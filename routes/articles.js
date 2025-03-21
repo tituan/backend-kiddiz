@@ -247,7 +247,7 @@ router.get('/get-by/buyer/:token', async (req, res) => {
 
         const user = await User.findOne({ token: req.params.token })
 
-        const articles = await Article.find({ user: user._id, availableStock: { $gt: 0 } })
+        const articles = await Article.find({ user: user._id, availableStock: { $gt: 0 } }) // $gt: 0 pour afficher les articles en stock
             .populate('user', 'firstname lastname followers note address.city token -_id')
             .populate('usersLikers', 'token -_id');
     

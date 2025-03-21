@@ -251,6 +251,7 @@ router.post("/signin", async (req, res) => {
 });
 // router logOut reset the token
 
+// router to log out (delete the token)
 router.put("/logout/:token", async (req, res) => {
   try {
     // Check if the token is provided

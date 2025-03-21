@@ -71,6 +71,7 @@ router.post('/', async (req, res) => {
     }
 });
 
+
 router.get('/:userToken', async (req, res) => {
     try {
         const userToken = req.params.userToken;
