@@ -71,9 +71,10 @@ router.post('/', async (req, res) => {
     }
 });
 
-
 router.get('/:userToken', async (req, res) => {
+
     try {
+
         const userToken = req.params.userToken;
 
         // Vérifier si l'utilisateur existe
@@ -83,7 +84,14 @@ router.get('/:userToken', async (req, res) => {
         }
 
         // Vérifier si l'utilisateur a des articles favoris
-        const favoriteArticles = await FavoriteArticle.findOne({ user: user._id }).populate('articles');
+        const favoriteArticles = await FavoriteArticle.findOne({ user: user._id })
+        .populate({
+            path: 'articles',
+            populate: {
+                path: 'user',
+                select: 'firstname token -_id',
+            },
+        });
 
         // Vérifier si l'utilisateur a des articles favoris
         if (!favoriteArticles || favoriteArticles.articles.length === 0) {
