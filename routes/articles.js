@@ -240,54 +240,6 @@ router.get('/recent', async (req, res) => {
 })
 
 // Display articles by Seller
-router.get('/get-by/buyer/:token', async (req, res) => {
-
-    try {
-
-        const user = await User.findOne({ token: req.params.token })
-
-        const articles = await Article.find({ user: user._id, availableStock: { $gt: 0 } }) // $gt: 0 pour afficher les articles en stock
-            .populate('user', 'firstname lastname followers note address.city token -_id')
-            .populate('usersLikers', 'token -_id');
-    
-        // Check if the id is exist in database
-        if (!articles || articles.length === 0) {
-            return res
-                .status(404)
-                .json({ result: false, error: "No articles not found" });
-        }
-
-        // Mapper les articles pour ne renvoyer que les informations souhaitées
-        const articlesResponse = articles.map(article => ({
-            id: article._id,
-            title: article.title,
-            productDescription: article.productDescription,
-            category: article.category,
-            itemType: article.itemType,
-            condition: article.condition,
-            price: article.price,
-            pictures: article.pictures,
-            articleCreationDate: article.articleCreationDate,
-            likesCount: article.usersLikers.length, // Ajout du nombre de likes
-            availableStock: article.availableStock,
-            user: article.user,
-            usersLikers: article.usersLikers,
-        }));
-
-        res.json({ result: true, articles: articlesResponse });
-
-    } catch (error) {
-        res
-            .status(500)
-            .json({
-                result: false,
-                message: "An error has occurred.",
-                error: error.message,
-            });
-    }
-})
-
-// Display articles by Seller
 router.get('/get-by/seller/:token', async (req, res) => {
 
     try {
