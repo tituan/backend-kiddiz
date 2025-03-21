@@ -421,6 +421,7 @@ router.put("/iban/:token", async (req, res) => {
     }
   });
 
+  // router to get the user by token
 router.get("/get-by-token/:token", async (req, res) => {
   try {
       const { token } = req.params;
