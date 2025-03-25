@@ -72,7 +72,7 @@ router.post("/new/conversation/:articleId/:token", async (req, res) => {
     });
 
     const conversation = await newConversation.save();
-    res.status(201).json(conversation);
+    res.status(201).json(conversation); 
   } catch (error) {
     console.error("Erreur lors de la création de la conversation :", error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -92,15 +92,15 @@ router.get("/list/:token", async (req, res) => {
     const conversationIds = allConversations.map((e) => e._id)
 
     const conversationsList = await Message.aggregate([
-      {
-        $match: {
+      {// On filtre les messages pour ne garder que ceux qui sont dans les conversations de l'utilisateur
+        $match: { // On filtre les messages pour ne garder que ceux qui sont dans les conversations de l'utilisateur
           conversationId: {
-            $in: conversationIds
+            $in: conversationIds 
           }
         }
       },
       {
-        $lookup: {
+        $lookup: { // On ajoute les infos de l'utilisateur qui a envoyé le message
           from: "users",
           localField: "sender",
           foreignField: "_id",
@@ -108,7 +108,7 @@ router.get("/list/:token", async (req, res) => {
         }
       },
       {
-        $lookup: {
+        $lookup: { // On ajoute les infos de l'utilisateur qui a reçu le message
           from: "users",
           localField: "receiver",
           foreignField: "_id",
@@ -116,7 +116,7 @@ router.get("/list/:token", async (req, res) => {
         }
       },
       {
-        $lookup: {
+        $lookup: { // On ajoute les infos de la conversation
           from: "conversations",
           localField: "conversationId",
           foreignField: "_id",
@@ -124,7 +124,7 @@ router.get("/list/:token", async (req, res) => {
         }
       },
       {
-        $addFields: {
+        $addFields: { // On ajoute les infos de l'utilisateur qui a envoyé le message
           receiver: {
             $first: "$receiver"
           },
@@ -137,7 +137,7 @@ router.get("/list/:token", async (req, res) => {
         }
       },
       {
-        $lookup: {
+        $lookup: { // On ajoute les infos de l'article
           from: "articles",
           localField: "conversation.articleId",
           foreignField: "_id",
@@ -145,14 +145,14 @@ router.get("/list/:token", async (req, res) => {
         }
       },
       {
-        $addFields: {
+        $addFields: { // On ajoute les infos de l'article
           article: {
             $first: "$article"
           }
         }
       },
       {
-        $project: {
+        $project: { // On formate les données pour les envoyer au front
           conversationId: 1,
           content: 1,
           sender: {
@@ -166,7 +166,7 @@ router.get("/list/:token", async (req, res) => {
             _id: "$sender._id",
 
           },
-          receiver: {
+          receiver: { // On ajoute les infos de l'utilisateur qui a reçu le message
             name: {
               $concat: [
                 "$receiver.firstname",
@@ -184,7 +184,7 @@ router.get("/list/:token", async (req, res) => {
         }
       },
       {
-        $group: {
+        $group: { // On regroupe les messages par conversation
           _id: "$conversationId",
           messages: {
             $push: {

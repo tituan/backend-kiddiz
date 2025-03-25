@@ -240,7 +240,7 @@ router.get('/recent', async (req, res) => {
 })
 
 // Display articles by Seller
-router.get('/get-by/buyer/:token', async (req, res) => {
+router.get('/get-by/seller/:token', async (req, res) => {
 
     try {
 
@@ -609,7 +609,7 @@ router.put("/stock/:articleId", async (req, res) => {
         const { articleId } = req.params;
         const {
             token,
-        } = req.body;
+        } = req.body; 
 
         console.log("Article ID:", articleId); // Log pour vérifier l'ID
         console.log("Token:", token);
