@@ -38,7 +38,7 @@ router.post("/signup", async (req, res) => {
         "confirmPassword",
         "email",
         "lastname",
-        // "dateOfBirth",
+        "dateOfBirth",
       ])
     ) {
       return res.json({ result: false, error: "Missing or empty fields" });
