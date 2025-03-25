@@ -246,14 +246,14 @@ router.get('/get-by/seller/:token', async (req, res) => {
 
         const user = await User.findOne({ token: req.params.token })
 
-        const articles = await Article.find({ user: user._id, availableStock: { $gt: 0 } }) // $gt: 0 pour afficher les articles en stock
+        const articles = await Article.find({ user: user._id, availableStock: { $gt: 0 } })
             .populate('user', 'firstname lastname followers note address.city token -_id')
             .populate('usersLikers', 'token -_id');
-    
+
         // Check if the id is exist in database
         if (!articles || articles.length === 0) {
             return res
-                .status(404)
+                .status(200)
                 .json({ result: false, error: "No articles not found" });
         }
 
