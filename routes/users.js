@@ -25,7 +25,7 @@ router.post("/signup", async (req, res) => {
       email: req.body.email?.trim() || "",
       password: req.body.password,
       confirmPassword: req.body.confirmPassword,
-      // dateOfBirth: req.body.dateOfBirth,
+      dateOfBirth: req.body.dateOfBirth,
       conditionUtilisation: req.body.conditionUtilisation,
       publicy: req.body.publicy,
     };
